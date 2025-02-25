@@ -3,8 +3,6 @@
 import gleam/bool
 import gleam/int
 import gleam/list
-import gleam/option.{type Option, None, Some}
-import gleam/result
 import gleam/string
 
 pub type MergeMode {
