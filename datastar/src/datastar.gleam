@@ -1,10 +1,11 @@
-//// Refer to https://github.com/starfederation/datastar/blob/develop/sdk/README.md
+// Refer to https://github.com/starfederation/datastar/blob/develop/sdk/README.md
 
 import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/string
 
+/// The merge mode used by merge fragments
 pub type MergeMode {
   Morph
   Inner
@@ -54,6 +55,7 @@ type Line {
   LineRetry(Int)
 }
 
+/// SSE Events that can be send to the client
 pub type Event {
   EventMergeFragment(MergeFragmentEventConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
@@ -78,6 +80,19 @@ fn event_lines_to_strings(lines lines: List(Line)) {
   |> string.append("\n")
 }
 
+/// Takes an Event and generates a string to send back to the client
+///
+/// ```gleam
+/// remove_fragments("#target", [])
+/// |> event_to_string
+/// ```
+/// Generates
+/// ```
+/// event: datastar-remove-fragments
+/// data: selector #target
+///
+/// ```
+///
 pub fn event_to_string(event: Event) -> String {
   case event {
     EventMergeFragment(config) -> merge_fragments_event_to_string(config)
@@ -88,6 +103,7 @@ pub fn event_to_string(event: Event) -> String {
   }
 }
 
+/// Takes a list of Events and generates the string to send to the client
 pub fn events_to_string(events events: List(Event)) {
   events
   |> list.map(event_to_string)
@@ -134,48 +150,119 @@ pub opaque type EventOption(phantom) {
   EventOptionViewTransition(Bool)
 }
 
-/// This option is only used by execute_script
-pub fn auto_remove(value: Bool) -> EventOption(ExecuteScriptOptionType) {
+/// This option is only used by event_execute_script
+///
+/// ```
+/// data_auto_remove(False),
+/// ```
+/// Generates:
+///
+/// ```
+/// data: autoRemove false
+/// ```
+pub fn data_auto_remove(value: Bool) -> EventOption(ExecuteScriptOptionType) {
   EventOptionAutoRemove(value)
 }
 
-/// This option is only used by execute_script
-pub fn attributes(
+/// This option is only used by event_execute_script
+///
+/// ```
+/// data_attributes([#("type", "text/javascript")]),
+/// ```
+///
+/// Generates:
+/// ```
+/// data: attributes type text/javascript
+/// ```
+///
+pub fn data_attributes(
   value: List(#(String, String)),
 ) -> EventOption(ExecuteScriptOptionType) {
   EventOptionAttributes(value)
 }
 
-pub fn merge_mode(mode: MergeMode) -> EventOption(MergeFragmentOptionType) {
+/// This option is only used by event_merge_fragments
+///
+/// ```gleam
+/// data_merge_mode(MergeMode.Inner),
+/// ```
+///
+/// Generates:
+/// ```
+/// data: mergeMode inner
+/// ```
+///
+pub fn data_merge_mode(mode: MergeMode) -> EventOption(MergeFragmentOptionType) {
   EventOptionMergeMode(mode)
 }
 
-pub fn view_transition(value: Bool) -> EventOption(p) {
+/// This option is used by event_merge_fragments and event_remove_fragments
+pub fn data_view_transition(value: Bool) -> EventOption(p) {
   EventOptionViewTransition(value)
 }
 
+/// Optional for all SSE events
+///
+/// ```
+/// dt.event_id("123"),
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
 pub fn event_id(value: String) -> EventOption(a) {
   EventOptionEventId(value)
 }
 
-pub fn only_if_missing(value: Bool) -> EventOption(MergeSignalsOptionType) {
+/// Option only used by event_merge_signals
+pub fn data_only_if_missing(value: Bool) -> EventOption(MergeSignalsOptionType) {
   EventOptionOnlyIfMissing(value)
 }
 
+/// Option used by all events
+///
+/// ```gleam
+/// retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
 pub fn retry(value: Int) -> EventOption(a) {
   EventOptionRetry(value)
 }
 
-pub fn selector(value: String) -> EventOption(MergeFragmentOptionType) {
+/// Option only used by event_merge_fragments
+///
+/// ```gleam
+/// data_selector("#feed"),
+/// ```
+/// Generates:
+/// ```
+/// data: selector #feed
+/// ```
+pub fn data_selector(value: String) -> EventOption(MergeFragmentOptionType) {
   EventOptionSelector(value)
 }
 
-pub fn settle_duration(value: Int) -> EventOption(a) {
+/// Option used by event_merge_fragments and event_remove_fragments
+pub fn data_settle_duration(value: Int) -> EventOption(a) {
   EventOptionSettleDuration(value)
 }
 
+/// Event to send new fragments to the client
 ///
-pub fn merge_fragments(
+/// ```gleam
+/// event_merge_fragments("<span>1</span>", [data_selector("#feed")]),
+/// ```
+/// Generates:
+/// ```
+/// event: datastar-merge-fragments
+/// data: selector #feed
+/// data: fragments <span>1</span>
+///
+/// ```
+pub fn event_merge_fragments(
   fragments fragments: String,
   options options: List(EventOption(MergeFragmentOptionType)),
 ) -> Event {
@@ -190,7 +277,18 @@ pub opaque type RemoveFragmentsConfig {
   )
 }
 
-pub fn remove_fragments(
+/// Event to remove fragments on the client
+///
+/// ```gleam
+/// event_remove_fragments("#feed", []),
+/// ```
+/// Generates:
+/// ```
+/// event: datastar-remove-fragments
+/// data: selector #feed
+///
+/// ```
+pub fn event_remove_fragments(
   selector: String,
   options: List(EventOption(RemoveFragmentOptionType)),
 ) {
@@ -205,7 +303,18 @@ pub opaque type MergeSignalsConfig {
   )
 }
 
-pub fn merge_signals(
+/// Generate a `datastar-merge-signals` event
+///
+/// ```gleam
+/// event_merge_signals("{\"output\":\"Output Test\"}", []),
+/// ```
+/// Generates:
+/// ```
+/// event: datastar-merge-signals
+/// data: signals {\"output\":\"Output Test\"}
+///
+/// ```
+pub fn event_merge_signals(
   signals: String,
   options: List(EventOption(MergeSignalsOptionType)),
 ) {
@@ -220,7 +329,19 @@ pub opaque type RemoveSignalsConfig {
   )
 }
 
-pub fn remove_signals(
+/// Generate a `datastar-remove-signals` event
+///
+/// ```gleam
+/// event_remove_signals(["user.name", "user.email"], [])
+/// ```
+/// Generates:
+/// ```
+/// event: datastar-remove-signals
+/// data: paths user.name
+/// data: paths user.email
+///
+/// ```
+pub fn event_remove_signals(
   signals: List(String),
   options: List(EventOption(RemoveSignalsOptionType)),
 ) {
@@ -235,7 +356,19 @@ pub opaque type ExecuteScriptConfig {
   )
 }
 
-pub fn execute_script(
+/// Generate a `datastar-execute-script` event
+///
+/// ```gleam
+/// event_execute_script("window.location = \"https://data-star.dev\"", [ event_id("123") ])
+/// |> event_to_string
+/// ```
+/// Generates
+/// ```
+/// event: datastar-execute-script
+/// id: 123
+/// data: script window.location = \"https://data-star.dev\"
+/// ```
+pub fn event_execute_script(
   script: String,
   options: List(EventOption(ExecuteScriptOptionType)),
 ) {
@@ -243,7 +376,7 @@ pub fn execute_script(
   |> EventExecuteScript
 }
 
-/// Build the event strings
+// Build the event strings
 fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   [
     [LineEventType(MergeFragments)],

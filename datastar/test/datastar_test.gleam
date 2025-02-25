@@ -12,7 +12,7 @@ pub fn merge_fragments_minimal_test() {
 data: fragments <span>1</span>
 "
 
-  dt.merge_fragments(fragments: "<span>1</span>", options: [])
+  dt.event_merge_fragments(fragments: "<span>1</span>", options: [])
   |> dt.event_to_string
   |> should.equal(expected)
 }
@@ -29,13 +29,13 @@ data: useViewTransition true
 data: fragments <span>1</span>
 "
 
-  dt.merge_fragments(fragments: "<span>1</span>", options: [
-    dt.merge_mode(dt.Inner),
-    dt.view_transition(True),
-    dt.selector("#feed"),
+  dt.event_merge_fragments(fragments: "<span>1</span>", options: [
+    dt.data_merge_mode(dt.Inner),
+    dt.data_view_transition(True),
+    dt.data_selector("#feed"),
     dt.event_id("123"),
     dt.retry(2000),
-    dt.settle_duration(10),
+    dt.data_settle_duration(10),
   ])
   |> dt.event_to_string
   |> should.equal(expected)
@@ -47,7 +47,7 @@ pub fn remove_fragments_minimal_test() {
 data: selector #target
 "
 
-  dt.remove_fragments("#target", [])
+  dt.event_remove_fragments("#target", [])
   |> dt.event_to_string
   |> should.equal(expected)
 }
@@ -62,11 +62,11 @@ data: settleDuration 200
 data: useViewTransition true
 "
 
-  dt.remove_fragments("#target", [
+  dt.event_remove_fragments("#target", [
     dt.event_id("123"),
     dt.retry(2000),
-    dt.settle_duration(200),
-    dt.view_transition(True),
+    dt.data_settle_duration(200),
+    dt.data_view_transition(True),
   ])
   |> dt.event_to_string
   |> should.equal(expected)
@@ -78,7 +78,7 @@ pub fn merge_signals_minimal_test() {
 data: signals {\"output\":\"Output Test\"}
 "
 
-  dt.merge_signals("{\"output\":\"Output Test\"}", [])
+  dt.event_merge_signals("{\"output\":\"Output Test\"}", [])
   |> dt.event_to_string
   |> should.equal(expected)
 }
@@ -92,9 +92,9 @@ data: onlyIfMissing true
 data: signals {\"output\":\"Output Test\"}
 "
 
-  dt.merge_signals("{\"output\":\"Output Test\"}", [
+  dt.event_merge_signals("{\"output\":\"Output Test\"}", [
     dt.event_id("123"),
-    dt.only_if_missing(True),
+    dt.data_only_if_missing(True),
     dt.retry(2000),
   ])
   |> dt.event_to_string
@@ -108,7 +108,7 @@ data: paths user.name
 data: paths user.email
 "
 
-  dt.remove_signals(["user.name", "user.email"], [])
+  dt.event_remove_signals(["user.name", "user.email"], [])
   |> dt.event_to_string
   |> should.equal(expected)
 }
@@ -122,7 +122,7 @@ data: paths user.name
 data: paths user.email
 "
 
-  dt.remove_signals(["user.name", "user.email"], [
+  dt.event_remove_signals(["user.name", "user.email"], [
     dt.event_id("123"),
     dt.retry(2000),
   ])
@@ -136,7 +136,7 @@ pub fn execute_script_minimal_test() {
 data: script window.location = \"https://data-star.dev\"
 "
 
-  dt.execute_script("window.location = \"https://data-star.dev\"", [])
+  dt.event_execute_script("window.location = \"https://data-star.dev\"", [])
   |> dt.event_to_string
   |> should.equal(expected)
 }
@@ -151,11 +151,11 @@ data: attributes type text/javascript
 data: script window.location = \"https://data-star.dev\"
 "
 
-  dt.execute_script("window.location = \"https://data-star.dev\"", [
+  dt.event_execute_script("window.location = \"https://data-star.dev\"", [
     dt.event_id("123"),
     dt.retry(2000),
-    dt.auto_remove(False),
-    dt.attributes([#("type", "text/javascript")]),
+    dt.data_auto_remove(False),
+    dt.data_attributes([#("type", "text/javascript")]),
   ])
   |> dt.event_to_string
   |> should.equal(expected)
@@ -171,7 +171,10 @@ data: selector #id2
 
 "
 
-  [dt.merge_fragments("<span>1</span>", []), dt.remove_fragments("#id2", [])]
+  [
+    dt.event_merge_fragments("<span>1</span>", []),
+    dt.event_remove_fragments("#id2", []),
+  ]
   |> dt.events_to_string
   |> should.equal(expected)
 }
