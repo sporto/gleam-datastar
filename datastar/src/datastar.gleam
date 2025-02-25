@@ -29,7 +29,7 @@ fn merge_mode_to_string(merge_mode: MergeMode) {
   }
 }
 
-pub type EventType {
+type EventType {
   ExecuteScript
   MergeFragments
   MergeSignals
@@ -134,13 +134,12 @@ pub opaque type EventOption(phantom) {
   EventOptionViewTransition(Bool)
 }
 
-/// Options
-/// Only used by execute_script
+/// This option is only used by execute_script
 pub fn auto_remove(value: Bool) -> EventOption(ExecuteScriptOptionType) {
   EventOptionAutoRemove(value)
 }
 
-/// Only used by execute_script
+/// This option is only used by execute_script
 pub fn attributes(
   value: List(#(String, String)),
 ) -> EventOption(ExecuteScriptOptionType) {
@@ -175,7 +174,6 @@ pub fn settle_duration(value: Int) -> EventOption(a) {
   EventOptionSettleDuration(value)
 }
 
-/// Event constructors
 ///
 pub fn merge_fragments(
   fragments fragments: String,
@@ -185,7 +183,7 @@ pub fn merge_fragments(
   |> EventMergeFragment
 }
 
-pub type RemoveFragmentsConfig {
+pub opaque type RemoveFragmentsConfig {
   RemoveFragmentsConfig(
     selector: String,
     options: List(EventOption(RemoveFragmentOptionType)),
@@ -200,7 +198,7 @@ pub fn remove_fragments(
   |> EventRemoveFragments
 }
 
-pub type MergeSignalsConfig {
+pub opaque type MergeSignalsConfig {
   MergeSignalsConfig(
     signals: String,
     options: List(EventOption(MergeSignalsOptionType)),
@@ -215,7 +213,7 @@ pub fn merge_signals(
   |> EventMergeSignals
 }
 
-pub type RemoveSignalsConfig {
+pub opaque type RemoveSignalsConfig {
   RemoveSignalsConfig(
     signals: List(String),
     options: List(EventOption(RemoveSignalsOptionType)),
@@ -230,7 +228,7 @@ pub fn remove_signals(
   |> EventRemoveSignals
 }
 
-pub type ExecuteScriptConfig {
+pub opaque type ExecuteScriptConfig {
   ExecuteScriptConfig(
     script: String,
     options: List(EventOption(ExecuteScriptOptionType)),
