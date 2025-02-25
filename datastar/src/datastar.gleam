@@ -61,6 +61,7 @@ pub type Event {
   EventRemoveFragments(RemoveFragmentsConfig)
   EventMergeSignals(MergeSignalsConfig)
   EventRemoveSignals(RemoveSignalsConfig)
+  EventExecuteScript(ExecuteScriptConfig)
 }
 
 fn event_line_to_string(line: Line) {
@@ -85,6 +86,7 @@ pub fn event_to_string(event: Event) -> String {
     EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
     EventMergeSignals(config) -> merge_signals_event_to_string(config)
     EventRemoveSignals(config) -> remove_signals_event_to_string(config)
+    EventExecuteScript(config) -> execture_script_event_to_string(config)
   }
 }
 
@@ -118,7 +120,13 @@ pub opaque type RemoveSignalsOptionType {
   RemoveSignalsOptionType
 }
 
+pub opaque type ExecuteScriptOptionType {
+  ExecuteScriptOptionType
+}
+
 pub opaque type EventOption(phantom) {
+  EventOptionAttributes(List(#(String, String)))
+  EventOptionAutoRemove(Bool)
   EventOptionEventId(String)
   EventOptionMergeMode(MergeMode)
   EventOptionOnlyIfMissing(Bool)
@@ -129,6 +137,18 @@ pub opaque type EventOption(phantom) {
 }
 
 /// Options
+/// Only used by execute_script
+pub fn auto_remove(value: Bool) -> EventOption(ExecuteScriptOptionType) {
+  EventOptionAutoRemove(value)
+}
+
+/// Only used by execute_script
+pub fn attributes(
+  value: List(#(String, String)),
+) -> EventOption(ExecuteScriptOptionType) {
+  EventOptionAttributes(value)
+}
+
 pub fn merge_mode(mode: MergeMode) -> EventOption(MergeFragmentOptionType) {
   EventOptionMergeMode(mode)
 }
@@ -212,61 +232,129 @@ pub fn remove_signals(
   |> EventRemoveSignals
 }
 
-/// Build
+pub type ExecuteScriptConfig {
+  ExecuteScriptConfig(
+    script: String,
+    options: List(EventOption(ExecuteScriptOptionType)),
+  )
+}
+
+pub fn execute_script(
+  script: String,
+  options: List(EventOption(ExecuteScriptOptionType)),
+) {
+  ExecuteScriptConfig(script:, options:)
+  |> EventExecuteScript
+}
+
+/// Build the event strings
 fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   [
-    Ok(LineEventType(MergeFragments)),
+    [LineEventType(MergeFragments)],
     add_event_id(config.options),
     add_retry(config.options),
     add_merge_mode(config.options),
     add_selector(config.options),
     add_settle_duration(config.options),
     add_view_transition(config.options),
-    Ok(LineData("fragments " <> config.fragments)),
+    [LineData("fragments " <> config.fragments)],
   ]
-  |> result.values
+  |> list.flatten
   |> event_lines_to_strings
 }
 
 fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
   [
-    Ok(LineEventType(RemoveFragments)),
+    [LineEventType(RemoveFragments)],
     add_event_id(config.options),
     add_retry(config.options),
-    Ok(LineData("selector " <> config.selector)),
+    [LineData("selector " <> config.selector)],
     add_settle_duration(config.options),
     add_view_transition(config.options),
   ]
-  |> result.values
+  |> list.flatten
   |> event_lines_to_strings
 }
 
 fn merge_signals_event_to_string(config: MergeSignalsConfig) {
   [
-    Ok(LineEventType(MergeSignals)),
+    [LineEventType(MergeSignals)],
     add_event_id(config.options),
     add_retry(config.options),
     add_only_if_missing(config.options),
-    Ok(LineData("signals " <> config.signals)),
+    [LineData("signals " <> config.signals)],
   ]
-  |> result.values
+  |> list.flatten
   |> event_lines_to_strings
 }
 
 fn remove_signals_event_to_string(config: RemoveSignalsConfig) {
+  let signals =
+    list.map(config.signals, fn(signal) { LineData("paths " <> signal) })
+
   [
-    Ok(LineEventType(RemoveSignals)),
+    [LineEventType(RemoveSignals)],
     add_event_id(config.options),
     add_retry(config.options),
-    ..list.map(config.signals, fn(signal) { Ok(LineData("paths " <> signal)) })
+    signals,
   ]
-  |> result.values
+  |> list.flatten
   |> event_lines_to_strings
+}
+
+fn execture_script_event_to_string(config: ExecuteScriptConfig) {
+  [
+    [LineEventType(ExecuteScript)],
+    add_event_id(config.options),
+    add_retry(config.options),
+    add_auto_remove(config.options),
+    add_attributes(config.options),
+    [LineData("script " <> config.script)],
+  ]
+  |> list.flatten
+  |> event_lines_to_strings
+}
+
+fn add_attributes(options: List(EventOption(ExecuteScriptOptionType))) {
+  options
+  |> list.filter_map(fn(option) {
+    case option {
+      EventOptionAttributes(values) -> Ok(values)
+      _ -> Error("No attributes")
+    }
+  })
+  |> list.flat_map(fn(values) {
+    list.filter_map(values, fn(value) {
+      let #(k, v) = value
+      case k, v {
+        "type", "module" -> Error("Default")
+        _, _ -> Ok(LineData("attributes " <> k <> " " <> v))
+      }
+    })
+  })
+}
+
+fn add_auto_remove(options: List(EventOption(ExecuteScriptOptionType))) {
+  options
+  |> list.filter_map(fn(option) {
+    case option {
+      EventOptionAutoRemove(value) -> {
+        case value {
+          True -> Error("Default value")
+          False -> {
+            let str = value |> bool.to_string |> string.lowercase
+            Ok(LineData("autoRemove " <> str))
+          }
+        }
+      }
+      _ -> Error("")
+    }
+  })
 }
 
 fn add_event_id(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionEventId(id) -> Ok(LineEventId(id))
       _ -> Error("")
@@ -276,7 +364,7 @@ fn add_event_id(options: List(EventOption(p))) {
 
 fn add_merge_mode(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionMergeMode(merge_mode) -> {
         case merge_mode {
@@ -291,7 +379,7 @@ fn add_merge_mode(options: List(EventOption(p))) {
 
 fn add_only_if_missing(options: List(EventOption(MergeSignalsOptionType))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionOnlyIfMissing(value) -> {
         case value {
@@ -309,7 +397,7 @@ fn add_only_if_missing(options: List(EventOption(MergeSignalsOptionType))) {
 
 fn add_retry(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionRetry(id) -> Ok(LineRetry(id))
       _ -> Error("")
@@ -319,7 +407,7 @@ fn add_retry(options: List(EventOption(p))) {
 
 fn add_settle_duration(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionSettleDuration(val) -> {
         case val {
@@ -334,7 +422,7 @@ fn add_settle_duration(options: List(EventOption(p))) {
 
 fn add_selector(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionSelector(sel) -> Ok(LineData("selector " <> sel))
       _ -> Error("Not included")
@@ -344,7 +432,7 @@ fn add_selector(options: List(EventOption(p))) {
 
 fn add_view_transition(options: List(EventOption(p))) {
   options
-  |> list.find_map(fn(option) {
+  |> list.filter_map(fn(option) {
     case option {
       EventOptionViewTransition(val) -> {
         case val {
@@ -361,12 +449,3 @@ fn add_view_transition(options: List(EventOption(p))) {
     }
   })
 }
-// TODO should be execute_script
-// pub fn event_console_log(message) -> Event {
-//   Event(
-//     ExecuteScript,
-//     [Data("script console.log(\"" <> message <> "\")")],
-//     event_id: None,
-//     retry_duration: None,
-//   )
-// }

@@ -130,6 +130,37 @@ data: paths user.email
   |> should.equal(expected)
 }
 
+pub fn execute_script_minimal_test() {
+  let expected =
+    "event: datastar-execute-script
+data: script window.location = \"https://data-star.dev\"
+"
+
+  dt.execute_script("window.location = \"https://data-star.dev\"", [])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn execute_script_maximal_test() {
+  let expected =
+    "event: datastar-execute-script
+id: 123
+retry: 2000
+data: autoRemove false
+data: attributes type text/javascript
+data: script window.location = \"https://data-star.dev\"
+"
+
+  dt.execute_script("window.location = \"https://data-star.dev\"", [
+    dt.event_id("123"),
+    dt.retry(2000),
+    dt.auto_remove(False),
+    dt.attributes([#("type", "text/javascript")]),
+  ])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-merge-fragments
