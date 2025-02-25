@@ -59,6 +59,7 @@ type Line {
 pub type Event {
   EventMergeFragment(MergeFragmentEventConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
+  EventMergeSignals(MergeSignalsConfig)
 }
 
 fn event_line_to_string(line: Line) {
@@ -81,6 +82,7 @@ pub fn event_to_string(event: Event) -> String {
   case event {
     EventMergeFragment(config) -> merge_fragments_event_to_string(config)
     EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
+    EventMergeSignals(config) -> merge_signals_event_to_string(config)
   }
 }
 
@@ -106,9 +108,14 @@ pub opaque type RemoveFragmentOptionType {
   RemoveFragmentOptionType
 }
 
+pub opaque type MergeSignalsOptionType {
+  MergeSignalsOptionType
+}
+
 pub opaque type EventOption(phantom) {
-  EventOptionMergeMode(MergeMode)
   EventOptionEventId(String)
+  EventOptionMergeMode(MergeMode)
+  EventOptionOnlyIfMissing(Bool)
   EventOptionRetry(Int)
   EventOptionSelector(String)
   EventOptionSettleDuration(Int)
@@ -126,6 +133,10 @@ pub fn view_transition(value: Bool) -> EventOption(p) {
 
 pub fn event_id(value: String) -> EventOption(a) {
   EventOptionEventId(value)
+}
+
+pub fn only_if_missing(value: Bool) -> EventOption(MergeSignalsOptionType) {
+  EventOptionOnlyIfMissing(value)
 }
 
 pub fn retry(value: Int) -> EventOption(a) {
@@ -165,6 +176,21 @@ pub fn remove_fragments(
   |> EventRemoveFragments
 }
 
+pub type MergeSignalsConfig {
+  MergeSignalsConfig(
+    signals: String,
+    options: List(EventOption(MergeSignalsOptionType)),
+  )
+}
+
+pub fn merge_signals(
+  signals: String,
+  options: List(EventOption(MergeSignalsOptionType)),
+) {
+  MergeSignalsConfig(signals:, options:)
+  |> EventMergeSignals
+}
+
 /// Build
 fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   [
@@ -194,6 +220,18 @@ fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
   |> event_lines_to_strings
 }
 
+fn merge_signals_event_to_string(config: MergeSignalsConfig) {
+  [
+    Ok(LineEventType(MergeSignals)),
+    add_event_id(config.options),
+    add_retry(config.options),
+    add_only_if_missing(config.options),
+    Ok(LineData("signals " <> config.signals)),
+  ]
+  |> result.values
+  |> event_lines_to_strings
+}
+
 fn add_event_id(options: List(EventOption(p))) {
   options
   |> list.find_map(fn(option) {
@@ -215,6 +253,24 @@ fn add_merge_mode(options: List(EventOption(p))) {
         }
       }
       _ -> Error("")
+    }
+  })
+}
+
+fn add_only_if_missing(options: List(EventOption(MergeSignalsOptionType))) {
+  options
+  |> list.find_map(fn(option) {
+    case option {
+      EventOptionOnlyIfMissing(value) -> {
+        case value {
+          True -> {
+            let str = value |> bool.to_string |> string.lowercase
+            Ok(LineData("onlyIfMissing " <> str))
+          }
+          False -> Error("Default")
+        }
+      }
+      _ -> Error("Not included")
     }
   })
 }

@@ -72,6 +72,35 @@ data: useViewTransition true
   |> should.equal(expected)
 }
 
+pub fn merge_signals_minimal_test() {
+  let expected =
+    "event: datastar-merge-signals
+data: signals {\"output\":\"Output Test\"}
+"
+
+  dt.merge_signals("{\"output\":\"Output Test\"}", [])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn merge_signals_maximal_test() {
+  let expected =
+    "event: datastar-merge-signals
+id: 123
+retry: 2000
+data: onlyIfMissing true
+data: signals {\"output\":\"Output Test\"}
+"
+
+  dt.merge_signals("{\"output\":\"Output Test\"}", [
+    dt.event_id("123"),
+    dt.only_if_missing(True),
+    dt.retry(2000),
+  ])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-merge-fragments
