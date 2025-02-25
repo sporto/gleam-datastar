@@ -60,6 +60,7 @@ pub type Event {
   EventMergeFragment(MergeFragmentEventConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
   EventMergeSignals(MergeSignalsConfig)
+  EventRemoveSignals(RemoveSignalsConfig)
 }
 
 fn event_line_to_string(line: Line) {
@@ -83,6 +84,7 @@ pub fn event_to_string(event: Event) -> String {
     EventMergeFragment(config) -> merge_fragments_event_to_string(config)
     EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
     EventMergeSignals(config) -> merge_signals_event_to_string(config)
+    EventRemoveSignals(config) -> remove_signals_event_to_string(config)
   }
 }
 
@@ -110,6 +112,10 @@ pub opaque type RemoveFragmentOptionType {
 
 pub opaque type MergeSignalsOptionType {
   MergeSignalsOptionType
+}
+
+pub opaque type RemoveSignalsOptionType {
+  RemoveSignalsOptionType
 }
 
 pub opaque type EventOption(phantom) {
@@ -191,6 +197,21 @@ pub fn merge_signals(
   |> EventMergeSignals
 }
 
+pub type RemoveSignalsConfig {
+  RemoveSignalsConfig(
+    signals: List(String),
+    options: List(EventOption(RemoveSignalsOptionType)),
+  )
+}
+
+pub fn remove_signals(
+  signals: List(String),
+  options: List(EventOption(RemoveSignalsOptionType)),
+) {
+  RemoveSignalsConfig(signals:, options:)
+  |> EventRemoveSignals
+}
+
 /// Build
 fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   [
@@ -227,6 +248,17 @@ fn merge_signals_event_to_string(config: MergeSignalsConfig) {
     add_retry(config.options),
     add_only_if_missing(config.options),
     Ok(LineData("signals " <> config.signals)),
+  ]
+  |> result.values
+  |> event_lines_to_strings
+}
+
+fn remove_signals_event_to_string(config: RemoveSignalsConfig) {
+  [
+    Ok(LineEventType(RemoveSignals)),
+    add_event_id(config.options),
+    add_retry(config.options),
+    ..list.map(config.signals, fn(signal) { Ok(LineData("paths " <> signal)) })
   ]
   |> result.values
   |> event_lines_to_strings

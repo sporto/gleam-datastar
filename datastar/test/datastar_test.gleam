@@ -101,6 +101,35 @@ data: signals {\"output\":\"Output Test\"}
   |> should.equal(expected)
 }
 
+pub fn remove_signals_minimal_test() {
+  let expected =
+    "event: datastar-remove-signals
+data: paths user.name
+data: paths user.email
+"
+
+  dt.remove_signals(["user.name", "user.email"], [])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn remove_signals_maximal_test() {
+  let expected =
+    "event: datastar-remove-signals
+id: 123
+retry: 2000
+data: paths user.name
+data: paths user.email
+"
+
+  dt.remove_signals(["user.name", "user.email"], [
+    dt.event_id("123"),
+    dt.retry(2000),
+  ])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-merge-fragments
