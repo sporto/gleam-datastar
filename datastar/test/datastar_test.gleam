@@ -41,17 +41,48 @@ data: fragments <span>1</span>
   |> should.equal(expected)
 }
 
-pub fn event_has_empty_lines_test() {
+pub fn remove_fragments_minimal_test() {
   let expected =
     "event: datastar-remove-fragments
-data: selector #id1
+data: selector #target
+"
+
+  dt.remove_fragments("#target", [])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn remove_fragments_maximal_test() {
+  let expected =
+    "event: datastar-remove-fragments
+id: 123
+retry: 2000
+data: selector #target
+data: settleDuration 200
+data: useViewTransition true
+"
+
+  dt.remove_fragments("#target", [
+    dt.event_id("123"),
+    dt.retry(2000),
+    dt.settle_duration(200),
+    dt.view_transition(True),
+  ])
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn event_has_empty_lines_test() {
+  let expected =
+    "event: datastar-merge-fragments
+data: fragments <span>1</span>
 
 event: datastar-remove-fragments
 data: selector #id2
 
 "
 
-  [dt.remove_fragments("#id1", []), dt.remove_fragments("#id2", [])]
+  [dt.merge_fragments("<span>1</span>", []), dt.remove_fragments("#id2", [])]
   |> dt.events_to_string
   |> should.equal(expected)
 }

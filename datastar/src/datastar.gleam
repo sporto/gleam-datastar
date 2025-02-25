@@ -61,13 +61,6 @@ pub type Event {
   EventRemoveFragments(RemoveFragmentsConfig)
 }
 
-pub fn event_to_string(event: Event) -> String {
-  case event {
-    EventMergeFragment(config) -> merge_fragments_event_to_string(config)
-    EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
-  }
-}
-
 fn event_line_to_string(line: Line) {
   case line {
     LineEventType(event_type) -> "event: " <> event_type_to_string(event_type)
@@ -84,6 +77,13 @@ fn event_lines_to_strings(lines lines: List(Line)) {
   |> string.append("\n")
 }
 
+pub fn event_to_string(event: Event) -> String {
+  case event {
+    EventMergeFragment(config) -> merge_fragments_event_to_string(config)
+    EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
+  }
+}
+
 pub fn events_to_string(events events: List(Event)) {
   events
   |> list.map(event_to_string)
@@ -91,42 +91,22 @@ pub fn events_to_string(events events: List(Event)) {
   |> string.append("\n")
 }
 
-pub type MergeFragmentOptions {
-  MergeFragmentOptions(
-    selector: Option(String),
-    merge_mode: Option(MergeMode),
-    use_view_transition: Bool,
-    event_id: Option(String),
-    retry_duration: Option(Int),
-  )
-}
-
-pub fn merge_fragment_options() -> MergeFragmentOptions {
-  MergeFragmentOptions(
-    selector: None,
-    merge_mode: None,
-    use_view_transition: False,
-    event_id: None,
-    retry_duration: None,
-  )
-}
-
-pub type MergeFragmentEventConfig {
+pub opaque type MergeFragmentEventConfig {
   MergeFragmentEventConfig(
     fragments: String,
     options: List(EventOption(MergeFragmentOptionType)),
   )
 }
 
-pub type MergeFragmentOptionType {
+pub opaque type MergeFragmentOptionType {
   MergeFragmentOptionType
 }
 
-pub type RemoveFragmentOptionType {
+pub opaque type RemoveFragmentOptionType {
   RemoveFragmentOptionType
 }
 
-pub type EventOption(phantom) {
+pub opaque type EventOption(phantom) {
   EventOptionMergeMode(MergeMode)
   EventOptionEventId(String)
   EventOptionRetry(Int)
@@ -135,11 +115,12 @@ pub type EventOption(phantom) {
   EventOptionViewTransition(Bool)
 }
 
+/// Options
 pub fn merge_mode(mode: MergeMode) -> EventOption(MergeFragmentOptionType) {
   EventOptionMergeMode(mode)
 }
 
-pub fn view_transition(value: Bool) -> EventOption(MergeFragmentOptionType) {
+pub fn view_transition(value: Bool) -> EventOption(p) {
   EventOptionViewTransition(value)
 }
 
@@ -155,10 +136,12 @@ pub fn selector(value: String) -> EventOption(MergeFragmentOptionType) {
   EventOptionSelector(value)
 }
 
-pub fn settle_duration(value: Int) -> EventOption(MergeFragmentOptionType) {
+pub fn settle_duration(value: Int) -> EventOption(a) {
   EventOptionSettleDuration(value)
 }
 
+/// Event constructors
+///
 pub fn merge_fragments(
   fragments fragments: String,
   options options: List(EventOption(MergeFragmentOptionType)),
@@ -167,7 +150,23 @@ pub fn merge_fragments(
   |> EventMergeFragment
 }
 
-pub fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
+pub type RemoveFragmentsConfig {
+  RemoveFragmentsConfig(
+    selector: String,
+    options: List(EventOption(RemoveFragmentOptionType)),
+  )
+}
+
+pub fn remove_fragments(
+  selector: String,
+  options: List(EventOption(RemoveFragmentOptionType)),
+) {
+  RemoveFragmentsConfig(selector:, options:)
+  |> EventRemoveFragments
+}
+
+/// Build
+fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   [
     Ok(LineEventType(MergeFragments)),
     add_event_id(config.options),
@@ -182,12 +181,14 @@ pub fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
   |> event_lines_to_strings
 }
 
-pub fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
+fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
   [
     Ok(LineEventType(RemoveFragments)),
-    Ok(LineData("selector " <> config.selector)),
     add_event_id(config.options),
     add_retry(config.options),
+    Ok(LineData("selector " <> config.selector)),
+    add_settle_duration(config.options),
+    add_view_transition(config.options),
   ]
   |> result.values
   |> event_lines_to_strings
@@ -232,8 +233,12 @@ fn add_settle_duration(options: List(EventOption(p))) {
   options
   |> list.find_map(fn(option) {
     case option {
-      EventOptionSettleDuration(val) ->
-        Ok(LineData("settleDuration " <> int.to_string(val)))
+      EventOptionSettleDuration(val) -> {
+        case val {
+          300 -> Error("Default")
+          _ -> Ok(LineData("settleDuration " <> int.to_string(val)))
+        }
+      }
       _ -> Error("")
     }
   })
@@ -244,7 +249,7 @@ fn add_selector(options: List(EventOption(p))) {
   |> list.find_map(fn(option) {
     case option {
       EventOptionSelector(sel) -> Ok(LineData("selector " <> sel))
-      _ -> Error("")
+      _ -> Error("Not included")
     }
   })
 }
@@ -254,27 +259,19 @@ fn add_view_transition(options: List(EventOption(p))) {
   |> list.find_map(fn(option) {
     case option {
       EventOptionViewTransition(val) -> {
-        let str = val |> bool.to_string |> string.lowercase
-        Ok(LineData("useViewTransition " <> str))
+        case val {
+          True -> {
+            let str = val |> bool.to_string |> string.lowercase
+            Ok(LineData("useViewTransition " <> str))
+          }
+          False -> {
+            Error("Default")
+          }
+        }
       }
-      _ -> Error("")
+      _ -> Error("Not included")
     }
   })
-}
-
-pub type RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    selector: String,
-    options: List(EventOption(RemoveFragmentOptionType)),
-  )
-}
-
-pub fn remove_fragments(
-  selector: String,
-  options: List(EventOption(RemoveFragmentOptionType)),
-) {
-  RemoveFragmentsConfig(selector:, options:)
-  |> EventRemoveFragments
 }
 // TODO should be execute_script
 // pub fn event_console_log(message) -> Event {
