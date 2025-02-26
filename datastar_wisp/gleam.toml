@@ -1,12 +1,15 @@
-name = "datastar"
-version = "0.3.0"
+name = "datastar_wisp"
+version = "1.0.0"
 
-description = "Gleam bindings for https://data-star.dev/"
+description = "Wisp adaptor for Datastar"
 licences = ["MIT"]
 repository = { type = "github", user = "sporto", repo = "gleam-datastar" }
 
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
+wisp = ">= 1.0.0 and < 2.0.0"
+# datastar = ">= 0.3.0 and < 1.0.0"
+datastar = { path = "../datastar" }
 
 [dev-dependencies]
 gleeunit = ">= 1.0.0 and < 2.0.0"
