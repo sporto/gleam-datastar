@@ -1,5 +1,5 @@
 name = "datastar_wisp"
-version = "1.0.0"
+version = "1.0.1"
 
 description = "Wisp adaptor for Datastar"
 licences = ["MIT"]

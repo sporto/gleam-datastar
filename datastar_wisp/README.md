@@ -8,3 +8,16 @@ Wisp adaptor for <https://hexdocs.pm/datastar>
 ```sh
 gleam add datastar_wisp@1
 ```
+
+```gleam
+let events = [
+  datastar.merge_fragments("<span>Hello</span>")
+  |> datastar.merge_fragments_selector("#notice")
+  |> datastar.merge_fragments_end,
+]
+
+wisp.ok()
+|> datastar_wisp.send(events)
+```
+
+This will add the events data to the Wisp response. And will also add the expected headers by Datastar.
