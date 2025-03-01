@@ -42,6 +42,21 @@ data: fragments <span>1</span>
   |> should.equal(expected)
 }
 
+pub fn merge_fragments_defaults_test() {
+  let expected =
+    "event: datastar-merge-fragments
+data: fragments <span>1</span>
+"
+
+  dt.merge_fragments(fragments: "<span>1</span>")
+  |> dt.merge_fragments_w_merge_mode(dt.Morph)
+  |> dt.merge_fragments_w_settle_duration(300)
+  |> dt.merge_fragments_w_view_transition(False)
+  |> dt.merge_fragments_close
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
 pub fn remove_fragments_minimal_test() {
   let expected =
     "event: datastar-remove-fragments
@@ -74,6 +89,20 @@ data: useViewTransition true
   |> should.equal(expected)
 }
 
+pub fn remove_fragments_defaults_test() {
+  let expected =
+    "event: datastar-remove-fragments
+data: selector #target
+"
+
+  dt.remove_fragments("#target")
+  |> dt.remove_fragments_w_settle_duration(300)
+  |> dt.remove_fragments_w_view_transition(False)
+  |> dt.remove_fragments_close
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
 pub fn merge_signals_minimal_test() {
   let expected =
     "event: datastar-merge-signals
@@ -99,6 +128,19 @@ data: signals {\"output\":\"Output Test\"}
   |> dt.merge_signals_w_id("123")
   |> dt.merge_signals_w_only_if_missing(True)
   |> dt.merge_signals_w_retry(2000)
+  |> dt.merge_signals_close
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn merge_signals_defaults_test() {
+  let expected =
+    "event: datastar-merge-signals
+data: signals {\"output\":\"Output Test\"}
+"
+
+  dt.merge_signals("{\"output\":\"Output Test\"}")
+  |> dt.merge_signals_w_only_if_missing(False)
   |> dt.merge_signals_close
   |> dt.event_to_string
   |> should.equal(expected)
@@ -161,6 +203,20 @@ data: script window.location = \"https://data-star.dev\"
   |> dt.execute_script_w_retry(2000)
   |> dt.execute_script_auto_remove(False)
   |> dt.execute_script_attributes([#("type", "text/javascript")])
+  |> dt.execute_script_close
+  |> dt.event_to_string
+  |> should.equal(expected)
+}
+
+pub fn execute_script_defaults_test() {
+  let expected =
+    "event: datastar-execute-script
+data: script window.location = \"https://data-star.dev\"
+"
+
+  dt.execute_script("window.location = \"https://data-star.dev\"")
+  |> dt.execute_script_auto_remove(True)
+  |> dt.execute_script_attributes([])
   |> dt.execute_script_close
   |> dt.event_to_string
   |> should.equal(expected)
