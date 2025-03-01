@@ -132,8 +132,8 @@ pub type MergeFragmentOptions {
 ///
 /// ```gleam
 /// merge_fragments("<span>1</span>")
-/// |> merge_fragments_w_selector("#feed")
-/// |> merge_fragments_close
+/// |> merge_fragments_selector("#feed")
+/// |> merge_fragments_end
 /// ```
 /// Generates:
 /// ```
@@ -157,13 +157,13 @@ pub fn merge_fragments(fragments fragments: String) {
 }
 
 /// ```
-/// |> merge_fragments_w_id("123"),
+/// |> merge_fragments_event_id("123"),
 /// ```
 /// Generates:
 /// ```
 /// id: 123
 /// ```
-pub fn merge_fragments_w_id(
+pub fn merge_fragments_event_id(
   config: MergeFragmentConfig,
   value: String,
 ) -> MergeFragmentConfig {
@@ -174,13 +174,13 @@ pub fn merge_fragments_w_id(
 }
 
 /// ```gleam
-/// |> merge_fragments_w_merge_mode(MergeMode.Inner),
+/// |> merge_fragments_merge_mode(MergeMode.Inner),
 /// ```
 /// Generates:
 /// ```
 /// data: mergeMode inner
 /// ```
-pub fn merge_fragments_w_merge_mode(
+pub fn merge_fragments_merge_mode(
   config: MergeFragmentConfig,
   value: MergeMode,
 ) -> MergeFragmentConfig {
@@ -191,13 +191,13 @@ pub fn merge_fragments_w_merge_mode(
 }
 
 /// ```gleam
-/// |> merge_fragments_w_retry(3000),
+/// |> merge_fragments_retry(3000),
 /// ```
 /// Generates:
 /// ```
 /// retry: 3000
 /// ```
-pub fn merge_fragments_w_retry(
+pub fn merge_fragments_retry(
   config: MergeFragmentConfig,
   value: Int,
 ) -> MergeFragmentConfig {
@@ -208,13 +208,13 @@ pub fn merge_fragments_w_retry(
 }
 
 /// ```gleam
-/// |> merge_fragments_w_selector("#feed"),
+/// |> merge_fragments_selector("#feed"),
 /// ```
 /// Generates:
 /// ```
 /// data: selector #feed
 /// ```
-pub fn merge_fragments_w_selector(
+pub fn merge_fragments_selector(
   config: MergeFragmentConfig,
   value: String,
 ) -> MergeFragmentConfig {
@@ -224,7 +224,7 @@ pub fn merge_fragments_w_selector(
   )
 }
 
-pub fn merge_fragments_w_settle_duration(
+pub fn merge_fragments_settle_duration(
   config: MergeFragmentConfig,
   value: Int,
 ) -> MergeFragmentConfig {
@@ -234,7 +234,7 @@ pub fn merge_fragments_w_settle_duration(
   )
 }
 
-pub fn merge_fragments_w_view_transition(
+pub fn merge_fragments_view_transition(
   config: MergeFragmentConfig,
   value: Bool,
 ) -> MergeFragmentConfig {
@@ -244,7 +244,7 @@ pub fn merge_fragments_w_view_transition(
   )
 }
 
-pub fn merge_fragments_close(config: MergeFragmentConfig) -> Event {
+pub fn merge_fragments_end(config: MergeFragmentConfig) -> Event {
   EventMergeFragment(config)
 }
 
@@ -265,7 +265,7 @@ pub type RemoveFragmentsOptions {
 ///
 /// ```gleam
 /// remove_fragments("#feed")
-/// |> remove_fragments_close
+/// |> remove_fragments_end
 /// ```
 /// Generates:
 /// ```
@@ -285,13 +285,13 @@ pub fn remove_fragments(selector: String) {
 }
 
 /// ```
-/// |> remove_fragments_w_id("123"),
+/// |> remove_fragments_event_id("123"),
 /// ```
 /// Generates:
 /// ```
 /// id: 123
 /// ```
-pub fn remove_fragments_w_id(
+pub fn remove_fragments_event_id(
   config: RemoveFragmentsConfig,
   value: String,
 ) -> RemoveFragmentsConfig {
@@ -302,13 +302,13 @@ pub fn remove_fragments_w_id(
 }
 
 /// ```gleam
-/// |> remove_fragments_w_retry(3000),
+/// |> remove_fragments_retry(3000),
 /// ```
 /// Generates:
 /// ```
 /// retry: 3000
 /// ```
-pub fn remove_fragments_w_retry(
+pub fn remove_fragments_retry(
   config: RemoveFragmentsConfig,
   value: Int,
 ) -> RemoveFragmentsConfig {
@@ -318,7 +318,7 @@ pub fn remove_fragments_w_retry(
   )
 }
 
-pub fn remove_fragments_w_settle_duration(
+pub fn remove_fragments_settle_duration(
   config: RemoveFragmentsConfig,
   value: Int,
 ) -> RemoveFragmentsConfig {
@@ -328,7 +328,7 @@ pub fn remove_fragments_w_settle_duration(
   )
 }
 
-pub fn remove_fragments_w_view_transition(
+pub fn remove_fragments_view_transition(
   config: RemoveFragmentsConfig,
   value: Bool,
 ) -> RemoveFragmentsConfig {
@@ -338,7 +338,7 @@ pub fn remove_fragments_w_view_transition(
   )
 }
 
-pub fn remove_fragments_close(config: RemoveFragmentsConfig) {
+pub fn remove_fragments_end(config: RemoveFragmentsConfig) {
   EventRemoveFragments(config)
 }
 
@@ -358,7 +358,7 @@ pub type MergeSignalsOptions {
 ///
 /// ```gleam
 /// merge_signals("{\"output\":\"Output Test\"}")
-/// |> merge_signals_close
+/// |> merge_signals_end
 /// ```
 /// Generates:
 /// ```
@@ -376,13 +376,13 @@ pub fn merge_signals(signals: String) {
 
 /// ```
 /// ...
-/// |> merge_signals_w_id("123")
+/// |> merge_signals_event_id("123")
 /// ```
 /// Generates:
 /// ```
 /// id: 123
 /// ```
-pub fn merge_signals_w_id(config: MergeSignalsConfig, value: String) {
+pub fn merge_signals_event_id(config: MergeSignalsConfig, value: String) {
   MergeSignalsConfig(
     ..config,
     options: MergeSignalsOptions(..config.options, event_id: Some(value)),
@@ -390,13 +390,13 @@ pub fn merge_signals_w_id(config: MergeSignalsConfig, value: String) {
 }
 
 /// ```gleam
-/// |> merge_signals_w_retry(3000),
+/// |> merge_signals_retry(3000),
 /// ```
 /// Generates:
 /// ```
 /// retry: 3000
 /// ```
-pub fn merge_signals_w_retry(config: MergeSignalsConfig, value: Int) {
+pub fn merge_signals_retry(config: MergeSignalsConfig, value: Int) {
   MergeSignalsConfig(
     ..config,
     options: MergeSignalsOptions(..config.options, retry: Some(value)),
@@ -404,20 +404,20 @@ pub fn merge_signals_w_retry(config: MergeSignalsConfig, value: Int) {
 }
 
 /// ```gleam
-/// |> merge_signals_w_only_if_missing(True),
+/// |> merge_signals_only_if_missing(True),
 /// ```
 /// Generates:
 /// ```
 /// data: onlyIfMissing true
 /// ```
-pub fn merge_signals_w_only_if_missing(config: MergeSignalsConfig, value: Bool) {
+pub fn merge_signals_only_if_missing(config: MergeSignalsConfig, value: Bool) {
   MergeSignalsConfig(
     ..config,
     options: MergeSignalsOptions(..config.options, only_if_missing: value),
   )
 }
 
-pub fn merge_signals_close(config: MergeSignalsConfig) {
+pub fn merge_signals_end(config: MergeSignalsConfig) {
   EventMergeSignals(config)
 }
 
@@ -433,7 +433,7 @@ pub type RemoveSignalsOptions {
 ///
 /// ```gleam
 /// remove_signals(["user.name", "user.email"])
-/// |> remove_signals_close
+/// |> remove_signals_end
 /// ```
 /// Generates:
 /// ```
@@ -450,13 +450,13 @@ pub fn remove_signals(signals: List(String)) {
 
 /// ```
 /// ...
-/// |> remove_signals_w_id("123")
+/// |> remove_signals_event_id("123")
 /// ```
 /// Generates:
 /// ```
 /// id: 123
 /// ```
-pub fn remove_signals_w_id(config: RemoveSignalsConfig, value: String) {
+pub fn remove_signals_event_id(config: RemoveSignalsConfig, value: String) {
   RemoveSignalsConfig(
     ..config,
     options: RemoveSignalsOptions(..config.options, event_id: Some(value)),
@@ -464,20 +464,20 @@ pub fn remove_signals_w_id(config: RemoveSignalsConfig, value: String) {
 }
 
 /// ```gleam
-/// |> remove_signals_w_retry(3000),
+/// |> remove_signals_retry(3000),
 /// ```
 /// Generates:
 /// ```
 /// retry: 3000
 /// ```
-pub fn remove_signals_w_retry(config: RemoveSignalsConfig, value: Int) {
+pub fn remove_signals_retry(config: RemoveSignalsConfig, value: Int) {
   RemoveSignalsConfig(
     ..config,
     options: RemoveSignalsOptions(..config.options, retry: Some(value)),
   )
 }
 
-pub fn remove_signals_close(config: RemoveSignalsConfig) {
+pub fn remove_signals_end(config: RemoveSignalsConfig) {
   EventRemoveSignals(config)
 }
 
@@ -498,8 +498,8 @@ pub type ExecuteScriptOptions {
 ///
 /// ```gleam
 /// execute_script("window.location = \"https://data-star.dev\"")
-/// |> execute_script_w_id("123")
-/// |> execute_script_close
+/// |> execute_script_event_id("123")
+/// |> execute_script_end
 /// ```
 /// Generates
 /// ```
@@ -552,13 +552,13 @@ pub fn execute_script_auto_remove(config: ExecuteScriptConfig, value: Bool) {
 
 /// ```
 /// ...
-/// |> execute_script_w_id("123")
+/// |> execute_script_event_id("123")
 /// ```
 /// Generates:
 /// ```
 /// id: 123
 /// ```
-pub fn execute_script_w_id(config: ExecuteScriptConfig, value: String) {
+pub fn execute_script_event_id(config: ExecuteScriptConfig, value: String) {
   ExecuteScriptConfig(
     ..config,
     options: ExecuteScriptOptions(..config.options, event_id: Some(value)),
@@ -566,20 +566,20 @@ pub fn execute_script_w_id(config: ExecuteScriptConfig, value: String) {
 }
 
 /// ```gleam
-/// |> execute_script_w_retry(3000),
+/// |> execute_script_retry(3000),
 /// ```
 /// Generates:
 /// ```
 /// retry: 3000
 /// ```
-pub fn execute_script_w_retry(config: ExecuteScriptConfig, value: Int) {
+pub fn execute_script_retry(config: ExecuteScriptConfig, value: Int) {
   ExecuteScriptConfig(
     ..config,
     options: ExecuteScriptOptions(..config.options, retry: Some(value)),
   )
 }
 
-pub fn execute_script_close(config: ExecuteScriptConfig) {
+pub fn execute_script_end(config: ExecuteScriptConfig) {
   EventExecuteScript(config)
 }
 
