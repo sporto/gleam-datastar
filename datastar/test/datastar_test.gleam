@@ -9,10 +9,10 @@ pub fn main() {
 pub fn merge_fragments_minimal_test() {
   let expected =
     "event: datastar-merge-fragments
-data: fragments <span>1</span>
+data: fragments <span>Hello</span>
 "
 
-  dt.merge_fragments("<span>1</span>")
+  dt.merge_fragments("<span>Hello</span>")
   |> dt.merge_fragments_end
   |> dt.event_to_string
   |> should.equal(expected)
@@ -225,7 +225,7 @@ data: script window.location = \"https://data-star.dev\"
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-merge-fragments
-data: fragments <span>1</span>
+data: fragments <span>Hello</span>
 
 event: datastar-remove-fragments
 data: selector #id2
@@ -233,8 +233,32 @@ data: selector #id2
 "
 
   [
-    dt.merge_fragments("<span>1</span>") |> dt.merge_fragments_end,
+    dt.merge_fragments("<span>Hello</span>") |> dt.merge_fragments_end,
     dt.remove_fragments("#id2") |> dt.remove_fragments_end,
+  ]
+  |> dt.events_to_string
+  |> should.equal(expected)
+}
+
+pub fn readme_example_test() {
+  let expected =
+    "event: datastar-remove-fragments
+data: selector #error
+
+event: datastar-merge-fragments
+data: mergeMode inner
+data: selector #notice
+data: fragments <span>Hello</span>
+
+"
+
+  [
+    dt.remove_fragments("#error")
+      |> dt.remove_fragments_end,
+    dt.merge_fragments("<span>Hello</span>")
+      |> dt.merge_fragments_selector("#notice")
+      |> dt.merge_fragments_merge_mode(dt.Inner)
+      |> dt.merge_fragments_end,
   ]
   |> dt.events_to_string
   |> should.equal(expected)

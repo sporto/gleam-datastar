@@ -4,7 +4,6 @@ import gleam/bool
 import gleam/int
 import gleam/list
 import gleam/option.{type Option, None, Some}
-import gleam/result
 import gleam/string
 
 /// The merge mode used by merge fragments
@@ -82,14 +81,15 @@ fn event_lines_to_strings(lines lines: List(Line)) {
   |> string.append("\n")
 }
 
-/// Takes an Event and generates a string to send back to the client
+/// Takes an `Event` and generates a string to send back to the client
 ///
 /// ```gleam
-/// remove_fragments("#target", [])
+/// remove_fragments("#target")
+/// |> remove_fragments_end
 /// |> event_to_string
 /// ```
-/// Generates
-/// ```
+/// Generates:
+/// ```text
 /// event: datastar-remove-fragments
 /// data: selector #target
 ///
@@ -105,7 +105,27 @@ pub fn event_to_string(event: Event) -> String {
   }
 }
 
-/// Takes a list of Events and generates the string to send to the client
+/// Takes a list of `Event` and generates the string to send to the client
+///
+/// ```gleam
+/// [
+///   merge_fragments("<span>Hello</span>")
+///   |> merge_fragments_end,
+///   remove_fragments("#target")
+///   |> remove_fragments_end,
+/// ]
+/// |> events_to_string
+/// ```
+/// Generates:
+/// ```text
+/// event: datastar-merge-fragments
+/// data: fragments <span>Hello</span>
+///
+/// event: datastar-remove-fragments
+/// data: selector #target
+///
+/// ```
+///
 pub fn events_to_string(events events: List(Event)) {
   events
   |> list.map(event_to_string)
@@ -136,7 +156,7 @@ pub type MergeFragmentOptions {
 /// |> merge_fragments_end
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// event: datastar-merge-fragments
 /// data: selector #feed
 /// data: fragments <span>1</span>
@@ -160,7 +180,7 @@ pub fn merge_fragments(fragments fragments: String) {
 /// |> merge_fragments_event_id("123"),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// id: 123
 /// ```
 pub fn merge_fragments_event_id(
@@ -177,7 +197,7 @@ pub fn merge_fragments_event_id(
 /// |> merge_fragments_merge_mode(MergeMode.Inner),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// data: mergeMode inner
 /// ```
 pub fn merge_fragments_merge_mode(
@@ -194,7 +214,7 @@ pub fn merge_fragments_merge_mode(
 /// |> merge_fragments_retry(3000),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// retry: 3000
 /// ```
 pub fn merge_fragments_retry(
@@ -211,7 +231,7 @@ pub fn merge_fragments_retry(
 /// |> merge_fragments_selector("#feed"),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// data: selector #feed
 /// ```
 pub fn merge_fragments_selector(
@@ -268,7 +288,7 @@ pub type RemoveFragmentsOptions {
 /// |> remove_fragments_end
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// event: datastar-remove-fragments
 /// data: selector #feed
 ///
@@ -288,7 +308,7 @@ pub fn remove_fragments(selector: String) {
 /// |> remove_fragments_event_id("123"),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// id: 123
 /// ```
 pub fn remove_fragments_event_id(
@@ -305,7 +325,7 @@ pub fn remove_fragments_event_id(
 /// |> remove_fragments_retry(3000),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// retry: 3000
 /// ```
 pub fn remove_fragments_retry(
@@ -361,7 +381,7 @@ pub type MergeSignalsOptions {
 /// |> merge_signals_end
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// event: datastar-merge-signals
 /// data: signals {\"output\":\"Output Test\"}
 ///
@@ -379,7 +399,7 @@ pub fn merge_signals(signals: String) {
 /// |> merge_signals_event_id("123")
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// id: 123
 /// ```
 pub fn merge_signals_event_id(config: MergeSignalsConfig, value: String) {
@@ -393,7 +413,7 @@ pub fn merge_signals_event_id(config: MergeSignalsConfig, value: String) {
 /// |> merge_signals_retry(3000),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// retry: 3000
 /// ```
 pub fn merge_signals_retry(config: MergeSignalsConfig, value: Int) {
@@ -407,7 +427,7 @@ pub fn merge_signals_retry(config: MergeSignalsConfig, value: Int) {
 /// |> merge_signals_only_if_missing(True),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// data: onlyIfMissing true
 /// ```
 pub fn merge_signals_only_if_missing(config: MergeSignalsConfig, value: Bool) {
@@ -436,7 +456,7 @@ pub type RemoveSignalsOptions {
 /// |> remove_signals_end
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// event: datastar-remove-signals
 /// data: paths user.name
 /// data: paths user.email
@@ -453,7 +473,7 @@ pub fn remove_signals(signals: List(String)) {
 /// |> remove_signals_event_id("123")
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// id: 123
 /// ```
 pub fn remove_signals_event_id(config: RemoveSignalsConfig, value: String) {
@@ -467,7 +487,7 @@ pub fn remove_signals_event_id(config: RemoveSignalsConfig, value: String) {
 /// |> remove_signals_retry(3000),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// retry: 3000
 /// ```
 pub fn remove_signals_retry(config: RemoveSignalsConfig, value: Int) {
@@ -502,7 +522,7 @@ pub type ExecuteScriptOptions {
 /// |> execute_script_end
 /// ```
 /// Generates
-/// ```
+/// ```text
 /// event: datastar-execute-script
 /// id: 123
 /// data: script window.location = \"https://data-star.dev\"
@@ -523,7 +543,7 @@ pub fn execute_script(script: String) {
 /// |> execute_script_attributes([#("type", "text/javascript")]),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// data: attributes type text/javascript
 /// ```
 pub fn execute_script_attributes(
@@ -540,7 +560,7 @@ pub fn execute_script_attributes(
 /// |> execute_script_auto_remove(False),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// data: autoRemove false
 /// ```
 pub fn execute_script_auto_remove(config: ExecuteScriptConfig, value: Bool) {
@@ -555,7 +575,7 @@ pub fn execute_script_auto_remove(config: ExecuteScriptConfig, value: Bool) {
 /// |> execute_script_event_id("123")
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// id: 123
 /// ```
 pub fn execute_script_event_id(config: ExecuteScriptConfig, value: String) {
@@ -569,7 +589,7 @@ pub fn execute_script_event_id(config: ExecuteScriptConfig, value: String) {
 /// |> execute_script_retry(3000),
 /// ```
 /// Generates:
-/// ```
+/// ```text
 /// retry: 3000
 /// ```
 pub fn execute_script_retry(config: ExecuteScriptConfig, value: Int) {
