@@ -3,6 +3,8 @@
 import gleam/bool
 import gleam/int
 import gleam/list
+import gleam/option.{type Option, None, Some}
+import gleam/result
 import gleam/string
 
 /// The merge mode used by merge fragments
@@ -57,7 +59,7 @@ type Line {
 
 /// SSE Events that can be send to the client
 pub type Event {
-  EventMergeFragment(MergeFragmentEventConfig)
+  EventMergeFragment(MergeFragmentConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
   EventMergeSignals(MergeSignalsConfig)
   EventRemoveSignals(RemoveSignalsConfig)
@@ -111,149 +113,27 @@ pub fn events_to_string(events events: List(Event)) {
   |> string.append("\n")
 }
 
-pub opaque type MergeFragmentEventConfig {
-  MergeFragmentEventConfig(
-    fragments: String,
-    options: List(EventOption(MergeFragmentOptionType)),
+pub type MergeFragmentConfig {
+  MergeFragmentConfig(fragments: String, options: MergeFragmentOptions)
+}
+
+pub type MergeFragmentOptions {
+  MergeFragmentOptions(
+    event_id: Option(String),
+    merge_mode: MergeMode,
+    retry: Option(Int),
+    selector: Option(String),
+    settle_duration: Int,
+    view_transition: Bool,
   )
-}
-
-pub opaque type MergeFragmentOptionType {
-  MergeFragmentOptionType
-}
-
-pub opaque type RemoveFragmentOptionType {
-  RemoveFragmentOptionType
-}
-
-pub opaque type MergeSignalsOptionType {
-  MergeSignalsOptionType
-}
-
-pub opaque type RemoveSignalsOptionType {
-  RemoveSignalsOptionType
-}
-
-pub opaque type ExecuteScriptOptionType {
-  ExecuteScriptOptionType
-}
-
-pub opaque type EventOption(phantom) {
-  EventOptionAttributes(List(#(String, String)))
-  EventOptionAutoRemove(Bool)
-  EventOptionEventId(String)
-  EventOptionMergeMode(MergeMode)
-  EventOptionOnlyIfMissing(Bool)
-  EventOptionRetry(Int)
-  EventOptionSelector(String)
-  EventOptionSettleDuration(Int)
-  EventOptionViewTransition(Bool)
-}
-
-/// This option is only used by event_execute_script
-///
-/// ```
-/// data_auto_remove(False),
-/// ```
-/// Generates:
-///
-/// ```
-/// data: autoRemove false
-/// ```
-pub fn data_auto_remove(value: Bool) -> EventOption(ExecuteScriptOptionType) {
-  EventOptionAutoRemove(value)
-}
-
-/// This option is only used by event_execute_script
-///
-/// ```
-/// data_attributes([#("type", "text/javascript")]),
-/// ```
-///
-/// Generates:
-/// ```
-/// data: attributes type text/javascript
-/// ```
-///
-pub fn data_attributes(
-  value: List(#(String, String)),
-) -> EventOption(ExecuteScriptOptionType) {
-  EventOptionAttributes(value)
-}
-
-/// This option is only used by event_merge_fragments
-///
-/// ```gleam
-/// data_merge_mode(MergeMode.Inner),
-/// ```
-///
-/// Generates:
-/// ```
-/// data: mergeMode inner
-/// ```
-///
-pub fn data_merge_mode(mode: MergeMode) -> EventOption(MergeFragmentOptionType) {
-  EventOptionMergeMode(mode)
-}
-
-/// This option is used by event_merge_fragments and event_remove_fragments
-pub fn data_view_transition(value: Bool) -> EventOption(p) {
-  EventOptionViewTransition(value)
-}
-
-/// Optional for all SSE events
-///
-/// ```
-/// dt.event_id("123"),
-/// ```
-/// Generates:
-/// ```
-/// id: 123
-/// ```
-pub fn event_id(value: String) -> EventOption(a) {
-  EventOptionEventId(value)
-}
-
-/// Option only used by event_merge_signals
-pub fn data_only_if_missing(value: Bool) -> EventOption(MergeSignalsOptionType) {
-  EventOptionOnlyIfMissing(value)
-}
-
-/// Option used by all events
-///
-/// ```gleam
-/// retry(3000),
-/// ```
-/// Generates:
-/// ```
-/// retry: 3000
-/// ```
-pub fn retry(value: Int) -> EventOption(a) {
-  EventOptionRetry(value)
-}
-
-/// Option only used by event_merge_fragments
-///
-/// ```gleam
-/// data_selector("#feed"),
-/// ```
-/// Generates:
-/// ```
-/// data: selector #feed
-/// ```
-pub fn data_selector(value: String) -> EventOption(MergeFragmentOptionType) {
-  EventOptionSelector(value)
-}
-
-/// Option used by event_merge_fragments and event_remove_fragments
-pub fn data_settle_duration(value: Int) -> EventOption(a) {
-  EventOptionSettleDuration(value)
 }
 
 /// Event to send new fragments to the client
 ///
 /// ```gleam
-/// event_merge_fragments("<span>1</span>", [data_selector("#feed")]),
+/// merge_fragments("<span>1</span>")
+/// |> merge_fragments_w_selector("#feed")
+/// |> merge_fragments_close
 /// ```
 /// Generates:
 /// ```
@@ -262,25 +142,130 @@ pub fn data_settle_duration(value: Int) -> EventOption(a) {
 /// data: fragments <span>1</span>
 ///
 /// ```
-pub fn event_merge_fragments(
-  fragments fragments: String,
-  options options: List(EventOption(MergeFragmentOptionType)),
-) -> Event {
-  MergeFragmentEventConfig(fragments:, options:)
-  |> EventMergeFragment
+pub fn merge_fragments(fragments fragments: String) {
+  let options =
+    MergeFragmentOptions(
+      event_id: None,
+      merge_mode: Morph,
+      retry: None,
+      selector: None,
+      settle_duration: 300,
+      view_transition: False,
+    )
+
+  MergeFragmentConfig(fragments:, options:)
 }
 
-pub opaque type RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    selector: String,
-    options: List(EventOption(RemoveFragmentOptionType)),
+/// ```
+/// |> merge_fragments_w_id("123"),
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
+pub fn merge_fragments_w_id(
+  config: MergeFragmentConfig,
+  value: String,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, event_id: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> merge_fragments_w_merge_mode(MergeMode.Inner),
+/// ```
+/// Generates:
+/// ```
+/// data: mergeMode inner
+/// ```
+pub fn merge_fragments_w_merge_mode(
+  config: MergeFragmentConfig,
+  value: MergeMode,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, merge_mode: value),
+  )
+}
+
+/// ```gleam
+/// |> merge_fragments_w_retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
+pub fn merge_fragments_w_retry(
+  config: MergeFragmentConfig,
+  value: Int,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, retry: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> merge_fragments_w_selector("#feed"),
+/// ```
+/// Generates:
+/// ```
+/// data: selector #feed
+/// ```
+pub fn merge_fragments_w_selector(
+  config: MergeFragmentConfig,
+  value: String,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, selector: Some(value)),
+  )
+}
+
+pub fn merge_fragments_w_settle_duration(
+  config: MergeFragmentConfig,
+  value: Int,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, settle_duration: value),
+  )
+}
+
+pub fn merge_fragments_w_view_transition(
+  config: MergeFragmentConfig,
+  value: Bool,
+) -> MergeFragmentConfig {
+  MergeFragmentConfig(
+    ..config,
+    options: MergeFragmentOptions(..config.options, view_transition: value),
+  )
+}
+
+pub fn merge_fragments_close(config: MergeFragmentConfig) -> Event {
+  EventMergeFragment(config)
+}
+
+pub type RemoveFragmentsConfig {
+  RemoveFragmentsConfig(selector: String, options: RemoveFragmentsOptions)
+}
+
+pub type RemoveFragmentsOptions {
+  RemoveFragmentsOptions(
+    event_id: Option(String),
+    retry: Option(Int),
+    settle_duration: Int,
+    view_transition: Bool,
   )
 }
 
 /// Event to remove fragments on the client
 ///
 /// ```gleam
-/// event_remove_fragments("#feed", []),
+/// remove_fragments("#feed")
+/// |> remove_fragments_close
 /// ```
 /// Generates:
 /// ```
@@ -288,25 +273,92 @@ pub opaque type RemoveFragmentsConfig {
 /// data: selector #feed
 ///
 /// ```
-pub fn event_remove_fragments(
-  selector: String,
-  options: List(EventOption(RemoveFragmentOptionType)),
-) {
+pub fn remove_fragments(selector: String) {
+  let options =
+    RemoveFragmentsOptions(
+      event_id: None,
+      retry: None,
+      settle_duration: 300,
+      view_transition: False,
+    )
   RemoveFragmentsConfig(selector:, options:)
-  |> EventRemoveFragments
 }
 
-pub opaque type MergeSignalsConfig {
-  MergeSignalsConfig(
-    signals: String,
-    options: List(EventOption(MergeSignalsOptionType)),
+/// ```
+/// |> remove_fragments_w_id("123"),
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
+pub fn remove_fragments_w_id(
+  config: RemoveFragmentsConfig,
+  value: String,
+) -> RemoveFragmentsConfig {
+  RemoveFragmentsConfig(
+    ..config,
+    options: RemoveFragmentsOptions(..config.options, event_id: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> remove_fragments_w_retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
+pub fn remove_fragments_w_retry(
+  config: RemoveFragmentsConfig,
+  value: Int,
+) -> RemoveFragmentsConfig {
+  RemoveFragmentsConfig(
+    ..config,
+    options: RemoveFragmentsOptions(..config.options, retry: Some(value)),
+  )
+}
+
+pub fn remove_fragments_w_settle_duration(
+  config: RemoveFragmentsConfig,
+  value: Int,
+) -> RemoveFragmentsConfig {
+  RemoveFragmentsConfig(
+    ..config,
+    options: RemoveFragmentsOptions(..config.options, settle_duration: value),
+  )
+}
+
+pub fn remove_fragments_w_view_transition(
+  config: RemoveFragmentsConfig,
+  value: Bool,
+) -> RemoveFragmentsConfig {
+  RemoveFragmentsConfig(
+    ..config,
+    options: RemoveFragmentsOptions(..config.options, view_transition: value),
+  )
+}
+
+pub fn remove_fragments_close(config: RemoveFragmentsConfig) {
+  EventRemoveFragments(config)
+}
+
+pub type MergeSignalsConfig {
+  MergeSignalsConfig(signals: String, options: MergeSignalsOptions)
+}
+
+pub type MergeSignalsOptions {
+  MergeSignalsOptions(
+    event_id: Option(String),
+    retry: Option(Int),
+    only_if_missing: Bool,
   )
 }
 
 /// Generate a `datastar-merge-signals` event
 ///
 /// ```gleam
-/// event_merge_signals("{\"output\":\"Output Test\"}", []),
+/// merge_signals("{\"output\":\"Output Test\"}")
+/// |> merge_signals_close
 /// ```
 /// Generates:
 /// ```
@@ -314,25 +366,74 @@ pub opaque type MergeSignalsConfig {
 /// data: signals {\"output\":\"Output Test\"}
 ///
 /// ```
-pub fn event_merge_signals(
-  signals: String,
-  options: List(EventOption(MergeSignalsOptionType)),
-) {
+pub fn merge_signals(signals: String) {
+  // TODO signals should be json
+  let options =
+    MergeSignalsOptions(event_id: None, retry: None, only_if_missing: False)
+
   MergeSignalsConfig(signals:, options:)
-  |> EventMergeSignals
 }
 
-pub opaque type RemoveSignalsConfig {
-  RemoveSignalsConfig(
-    signals: List(String),
-    options: List(EventOption(RemoveSignalsOptionType)),
+/// ```
+/// ...
+/// |> merge_signals_w_id("123")
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
+pub fn merge_signals_w_id(config: MergeSignalsConfig, value: String) {
+  MergeSignalsConfig(
+    ..config,
+    options: MergeSignalsOptions(..config.options, event_id: Some(value)),
   )
+}
+
+/// ```gleam
+/// |> merge_signals_w_retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
+pub fn merge_signals_w_retry(config: MergeSignalsConfig, value: Int) {
+  MergeSignalsConfig(
+    ..config,
+    options: MergeSignalsOptions(..config.options, retry: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> merge_signals_w_only_if_missing(True),
+/// ```
+/// Generates:
+/// ```
+/// data: onlyIfMissing true
+/// ```
+pub fn merge_signals_w_only_if_missing(config: MergeSignalsConfig, value: Bool) {
+  MergeSignalsConfig(
+    ..config,
+    options: MergeSignalsOptions(..config.options, only_if_missing: value),
+  )
+}
+
+pub fn merge_signals_close(config: MergeSignalsConfig) {
+  EventMergeSignals(config)
+}
+
+pub type RemoveSignalsConfig {
+  RemoveSignalsConfig(signals: List(String), options: RemoveSignalsOptions)
+}
+
+pub type RemoveSignalsOptions {
+  RemoveSignalsOptions(event_id: Option(String), retry: Option(Int))
 }
 
 /// Generate a `datastar-remove-signals` event
 ///
 /// ```gleam
-/// event_remove_signals(["user.name", "user.email"], [])
+/// remove_signals(["user.name", "user.email"])
+/// |> remove_signals_close
 /// ```
 /// Generates:
 /// ```
@@ -341,26 +442,64 @@ pub opaque type RemoveSignalsConfig {
 /// data: paths user.email
 ///
 /// ```
-pub fn event_remove_signals(
-  signals: List(String),
-  options: List(EventOption(RemoveSignalsOptionType)),
-) {
+pub fn remove_signals(signals: List(String)) {
+  let options = RemoveSignalsOptions(event_id: None, retry: None)
+
   RemoveSignalsConfig(signals:, options:)
-  |> EventRemoveSignals
 }
 
-pub opaque type ExecuteScriptConfig {
-  ExecuteScriptConfig(
-    script: String,
-    options: List(EventOption(ExecuteScriptOptionType)),
+/// ```
+/// ...
+/// |> remove_signals_w_id("123")
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
+pub fn remove_signals_w_id(config: RemoveSignalsConfig, value: String) {
+  RemoveSignalsConfig(
+    ..config,
+    options: RemoveSignalsOptions(..config.options, event_id: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> remove_signals_w_retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
+pub fn remove_signals_w_retry(config: RemoveSignalsConfig, value: Int) {
+  RemoveSignalsConfig(
+    ..config,
+    options: RemoveSignalsOptions(..config.options, retry: Some(value)),
+  )
+}
+
+pub fn remove_signals_close(config: RemoveSignalsConfig) {
+  EventRemoveSignals(config)
+}
+
+pub type ExecuteScriptConfig {
+  ExecuteScriptConfig(script: String, options: ExecuteScriptOptions)
+}
+
+pub type ExecuteScriptOptions {
+  ExecuteScriptOptions(
+    attributes: List(#(String, String)),
+    auto_remove: Bool,
+    event_id: Option(String),
+    retry: Option(Int),
   )
 }
 
 /// Generate a `datastar-execute-script` event
 ///
 /// ```gleam
-/// event_execute_script("window.location = \"https://data-star.dev\"", [ event_id("123") ])
-/// |> event_to_string
+/// execute_script("window.location = \"https://data-star.dev\"")
+/// |> execute_script_w_id("123")
+/// |> execute_script_close
 /// ```
 /// Generates
 /// ```
@@ -368,24 +507,92 @@ pub opaque type ExecuteScriptConfig {
 /// id: 123
 /// data: script window.location = \"https://data-star.dev\"
 /// ```
-pub fn event_execute_script(
-  script: String,
-  options: List(EventOption(ExecuteScriptOptionType)),
-) {
+pub fn execute_script(script: String) {
+  let options =
+    ExecuteScriptOptions(
+      attributes: [],
+      auto_remove: True,
+      event_id: None,
+      retry: None,
+    )
+
   ExecuteScriptConfig(script:, options:)
-  |> EventExecuteScript
+}
+
+/// ```gleam
+/// |> execute_script_attributes([#("type", "text/javascript")]),
+/// ```
+/// Generates:
+/// ```
+/// data: attributes type text/javascript
+/// ```
+pub fn execute_script_attributes(
+  config: ExecuteScriptConfig,
+  value: List(#(String, String)),
+) {
+  ExecuteScriptConfig(
+    ..config,
+    options: ExecuteScriptOptions(..config.options, attributes: value),
+  )
+}
+
+/// ```gleam
+/// |> execute_script_auto_remove(False),
+/// ```
+/// Generates:
+/// ```
+/// data: autoRemove false
+/// ```
+pub fn execute_script_auto_remove(config: ExecuteScriptConfig, value: Bool) {
+  ExecuteScriptConfig(
+    ..config,
+    options: ExecuteScriptOptions(..config.options, auto_remove: value),
+  )
+}
+
+/// ```
+/// ...
+/// |> execute_script_w_id("123")
+/// ```
+/// Generates:
+/// ```
+/// id: 123
+/// ```
+pub fn execute_script_w_id(config: ExecuteScriptConfig, value: String) {
+  ExecuteScriptConfig(
+    ..config,
+    options: ExecuteScriptOptions(..config.options, event_id: Some(value)),
+  )
+}
+
+/// ```gleam
+/// |> execute_script_w_retry(3000),
+/// ```
+/// Generates:
+/// ```
+/// retry: 3000
+/// ```
+pub fn execute_script_w_retry(config: ExecuteScriptConfig, value: Int) {
+  ExecuteScriptConfig(
+    ..config,
+    options: ExecuteScriptOptions(..config.options, retry: Some(value)),
+  )
+}
+
+pub fn execute_script_close(config: ExecuteScriptConfig) {
+  EventExecuteScript(config)
 }
 
 // Build the event strings
-fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
+fn merge_fragments_event_to_string(config: MergeFragmentConfig) {
   [
     [LineEventType(MergeFragments)],
-    add_event_id(config.options),
-    add_retry(config.options),
-    add_merge_mode(config.options),
-    add_selector(config.options),
-    add_settle_duration(config.options),
-    add_view_transition(config.options),
+    add_event_id(config.options.event_id),
+    add_retry(config.options.retry),
+    add_merge_mode(config.options.merge_mode),
+    add_selector(config.options.selector),
+    add_settle_duration(config.options.settle_duration),
+    add_view_transition(config.options.view_transition),
     [LineData("fragments " <> config.fragments)],
   ]
   |> list.flatten
@@ -395,11 +602,11 @@ fn merge_fragments_event_to_string(config: MergeFragmentEventConfig) {
 fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
   [
     [LineEventType(RemoveFragments)],
-    add_event_id(config.options),
-    add_retry(config.options),
+    add_event_id(config.options.event_id),
+    add_retry(config.options.retry),
     [LineData("selector " <> config.selector)],
-    add_settle_duration(config.options),
-    add_view_transition(config.options),
+    add_settle_duration(config.options.settle_duration),
+    add_view_transition(config.options.view_transition),
   ]
   |> list.flatten
   |> event_lines_to_strings
@@ -408,9 +615,9 @@ fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
 fn merge_signals_event_to_string(config: MergeSignalsConfig) {
   [
     [LineEventType(MergeSignals)],
-    add_event_id(config.options),
-    add_retry(config.options),
-    add_only_if_missing(config.options),
+    add_event_id(config.options.event_id),
+    add_retry(config.options.retry),
+    add_only_if_missing(config.options.only_if_missing),
     [LineData("signals " <> config.signals)],
   ]
   |> list.flatten
@@ -423,8 +630,8 @@ fn remove_signals_event_to_string(config: RemoveSignalsConfig) {
 
   [
     [LineEventType(RemoveSignals)],
-    add_event_id(config.options),
-    add_retry(config.options),
+    add_event_id(config.options.event_id),
+    add_retry(config.options.retry),
     signals,
   ]
   |> list.flatten
@@ -434,147 +641,92 @@ fn remove_signals_event_to_string(config: RemoveSignalsConfig) {
 fn execture_script_event_to_string(config: ExecuteScriptConfig) {
   [
     [LineEventType(ExecuteScript)],
-    add_event_id(config.options),
-    add_retry(config.options),
-    add_auto_remove(config.options),
-    add_attributes(config.options),
+    add_event_id(config.options.event_id),
+    add_retry(config.options.retry),
+    add_auto_remove(config.options.auto_remove),
+    add_attributes(config.options.attributes),
     [LineData("script " <> config.script)],
   ]
   |> list.flatten
   |> event_lines_to_strings
 }
 
-fn add_attributes(options: List(EventOption(ExecuteScriptOptionType))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionAttributes(values) -> Ok(values)
-      _ -> Error("No attributes")
-    }
-  })
+fn add_attributes(attributes: List(#(String, String))) {
+  attributes
   |> list.flat_map(fn(values) {
-    list.filter_map(values, fn(value) {
-      let #(k, v) = value
-      case k, v {
-        "type", "module" -> Error("Default")
-        _, _ -> Ok(LineData("attributes " <> k <> " " <> v))
-      }
-    })
-  })
-}
-
-fn add_auto_remove(options: List(EventOption(ExecuteScriptOptionType))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionAutoRemove(value) -> {
-        case value {
-          True -> Error("Default value")
-          False -> {
-            let str = value |> bool.to_string |> string.lowercase
-            Ok(LineData("autoRemove " <> str))
-          }
-        }
-      }
-      _ -> Error("")
+    let #(k, v) = values
+    case k, v {
+      "type", "module" -> []
+      _, _ -> [LineData("attributes " <> k <> " " <> v)]
     }
   })
 }
 
-fn add_event_id(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionEventId(id) -> Ok(LineEventId(id))
-      _ -> Error("")
+fn add_auto_remove(value: Bool) {
+  case value {
+    True -> []
+    False -> {
+      let str = value |> bool.to_string |> string.lowercase
+      [LineData("autoRemove " <> str)]
     }
-  })
+  }
 }
 
-fn add_merge_mode(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionMergeMode(merge_mode) -> {
-        case merge_mode {
-          Morph -> Error("")
-          _ -> Ok(LineData("mergeMode " <> merge_mode_to_string(merge_mode)))
-        }
-      }
-      _ -> Error("")
-    }
-  })
+fn option_to_list(option: Option(a)) {
+  case option {
+    Some(value) -> [value]
+    None -> []
+  }
 }
 
-fn add_only_if_missing(options: List(EventOption(MergeSignalsOptionType))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionOnlyIfMissing(value) -> {
-        case value {
-          True -> {
-            let str = value |> bool.to_string |> string.lowercase
-            Ok(LineData("onlyIfMissing " <> str))
-          }
-          False -> Error("Default")
-        }
-      }
-      _ -> Error("Not included")
-    }
-  })
+fn add_event_id(maybe: Option(String)) {
+  maybe
+  |> option_to_list
+  |> list.map(LineEventId)
 }
 
-fn add_retry(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionRetry(id) -> Ok(LineRetry(id))
-      _ -> Error("")
-    }
-  })
+fn add_merge_mode(merge_mode: MergeMode) {
+  case merge_mode {
+    Morph -> []
+    _ -> [LineData("mergeMode " <> merge_mode_to_string(merge_mode))]
+  }
 }
 
-fn add_settle_duration(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionSettleDuration(val) -> {
-        case val {
-          300 -> Error("Default")
-          _ -> Ok(LineData("settleDuration " <> int.to_string(val)))
-        }
-      }
-      _ -> Error("")
+fn add_only_if_missing(value: Bool) {
+  case value {
+    True -> {
+      let str = value |> bool.to_string |> string.lowercase
+      [LineData("onlyIfMissing " <> str)]
     }
-  })
+    False -> []
+  }
 }
 
-fn add_selector(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionSelector(sel) -> Ok(LineData("selector " <> sel))
-      _ -> Error("Not included")
-    }
-  })
+fn add_retry(maybe: Option(Int)) {
+  maybe
+  |> option_to_list
+  |> list.map(LineRetry)
 }
 
-fn add_view_transition(options: List(EventOption(p))) {
-  options
-  |> list.filter_map(fn(option) {
-    case option {
-      EventOptionViewTransition(val) -> {
-        case val {
-          True -> {
-            let str = val |> bool.to_string |> string.lowercase
-            Ok(LineData("useViewTransition " <> str))
-          }
-          False -> {
-            Error("Default")
-          }
-        }
-      }
-      _ -> Error("Not included")
+fn add_settle_duration(value: Int) {
+  case value {
+    300 -> []
+    _ -> [LineData("settleDuration " <> int.to_string(value))]
+  }
+}
+
+fn add_selector(maybe: Option(String)) {
+  maybe
+  |> option_to_list
+  |> list.map(fn(sel) { LineData("selector " <> sel) })
+}
+
+fn add_view_transition(value: Bool) {
+  case value {
+    True -> {
+      let str = value |> bool.to_string |> string.lowercase
+      [LineData("useViewTransition " <> str)]
     }
-  })
+    False -> []
+  }
 }
