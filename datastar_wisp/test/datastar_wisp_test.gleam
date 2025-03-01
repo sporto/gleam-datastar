@@ -11,7 +11,9 @@ pub fn main() {
 
 // gleeunit test functions end in `_test`
 pub fn send_test() {
-  let events = [datastar.event_merge_fragments("<div />", [])]
+  let events = [
+    datastar.merge_fragments("<div />") |> datastar.merge_fragments_end,
+  ]
 
   let response =
     wisp.ok()

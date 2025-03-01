@@ -34,3 +34,5 @@ data: fragments <span>Hello</span>
 API documentation at <https://hexdocs.pm/datastar>.
 
 Datastar SSE reference <https://data-star.dev/reference/sse_events>.
+
+To use this with **wisp**, see <https://hexdocs.pm/datastar_wisp>.
