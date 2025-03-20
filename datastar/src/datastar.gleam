@@ -2,6 +2,7 @@
 
 import gleam/bool
 import gleam/int
+import gleam/json.{type Json}
 import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
@@ -363,7 +364,7 @@ pub fn remove_fragments_end(config: RemoveFragmentsConfig) {
 }
 
 pub type MergeSignalsConfig {
-  MergeSignalsConfig(signals: String, options: MergeSignalsOptions)
+  MergeSignalsConfig(signals: Json, options: MergeSignalsOptions)
 }
 
 pub type MergeSignalsOptions {
@@ -377,16 +378,20 @@ pub type MergeSignalsOptions {
 /// Generate a `datastar-merge-signals` event
 ///
 /// ```gleam
-/// merge_signals("{\"output\":\"Output Test\"}")
+/// let json = json.object([
+///   #("name", json.string("sam"))
+/// ])
+///
+/// merge_signals(json)
 /// |> merge_signals_end
 /// ```
 /// Generates:
 /// ```text
 /// event: datastar-merge-signals
-/// data: signals {\"output\":\"Output Test\"}
+/// data: signals {\"name\":\"Sam\"}
 ///
 /// ```
-pub fn merge_signals(signals: String) {
+pub fn merge_signals(signals: Json) {
   // TODO signals should be json
   let options =
     MergeSignalsOptions(event_id: None, retry: None, only_if_missing: False)
@@ -638,7 +643,7 @@ fn merge_signals_event_to_string(config: MergeSignalsConfig) {
     add_event_id(config.options.event_id),
     add_retry(config.options.retry),
     add_only_if_missing(config.options.only_if_missing),
-    [LineData("signals " <> config.signals)],
+    [LineData("signals " <> json.to_string(config.signals))],
   ]
   |> list.flatten
   |> event_lines_to_strings

@@ -1,4 +1,5 @@
 import datastar as dt
+import gleam/json
 import gleeunit
 import gleeunit/should
 
@@ -106,10 +107,12 @@ data: selector #target
 pub fn merge_signals_minimal_test() {
   let expected =
     "event: datastar-merge-signals
-data: signals {\"output\":\"Output Test\"}
+data: signals {\"name\":\"sam\"}
 "
 
-  dt.merge_signals("{\"output\":\"Output Test\"}")
+  let json = json.object([#("name", json.string("sam"))])
+
+  dt.merge_signals(json)
   |> dt.merge_signals_end
   |> dt.event_to_string
   |> should.equal(expected)
@@ -121,10 +124,12 @@ pub fn merge_signals_maximal_test() {
 id: 123
 retry: 2000
 data: onlyIfMissing true
-data: signals {\"output\":\"Output Test\"}
+data: signals {\"name\":\"sam\"}
 "
 
-  dt.merge_signals("{\"output\":\"Output Test\"}")
+  let json = json.object([#("name", json.string("sam"))])
+
+  dt.merge_signals(json)
   |> dt.merge_signals_event_id("123")
   |> dt.merge_signals_only_if_missing(True)
   |> dt.merge_signals_retry(2000)
@@ -136,10 +141,12 @@ data: signals {\"output\":\"Output Test\"}
 pub fn merge_signals_defaults_test() {
   let expected =
     "event: datastar-merge-signals
-data: signals {\"output\":\"Output Test\"}
+data: signals {\"name\":\"sam\"}
 "
 
-  dt.merge_signals("{\"output\":\"Output Test\"}")
+  let json = json.object([#("name", json.string("sam"))])
+
+  dt.merge_signals(json)
   |> dt.merge_signals_only_if_missing(False)
   |> dt.merge_signals_end
   |> dt.event_to_string
