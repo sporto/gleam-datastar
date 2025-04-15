@@ -1,4 +1,4 @@
-import datastar/ds_sse as dt
+import datastar/ds_sse
 import gleam/json
 import gleeunit/should
 
@@ -8,9 +8,9 @@ pub fn merge_fragments_minimal_test() {
 data: fragments <span>Hello</span>
 "
 
-  dt.merge_fragments("<span>Hello</span>")
-  |> dt.merge_fragments_end
-  |> dt.event_to_string
+  ds_sse.merge_fragments("<span>Hello</span>")
+  |> ds_sse.merge_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -26,15 +26,15 @@ data: useViewTransition true
 data: fragments <span>1</span>
 "
 
-  dt.merge_fragments(fragments: "<span>1</span>")
-  |> dt.merge_fragments_event_id("123")
-  |> dt.merge_fragments_merge_mode(dt.Inner)
-  |> dt.merge_fragments_retry(2000)
-  |> dt.merge_fragments_selector("#feed")
-  |> dt.merge_fragments_settle_duration(10)
-  |> dt.merge_fragments_view_transition(True)
-  |> dt.merge_fragments_end
-  |> dt.event_to_string
+  ds_sse.merge_fragments(fragments: "<span>1</span>")
+  |> ds_sse.merge_fragments_event_id("123")
+  |> ds_sse.merge_fragments_merge_mode(ds_sse.Inner)
+  |> ds_sse.merge_fragments_retry(2000)
+  |> ds_sse.merge_fragments_selector("#feed")
+  |> ds_sse.merge_fragments_settle_duration(10)
+  |> ds_sse.merge_fragments_view_transition(True)
+  |> ds_sse.merge_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -44,12 +44,12 @@ pub fn merge_fragments_defaults_test() {
 data: fragments <span>1</span>
 "
 
-  dt.merge_fragments(fragments: "<span>1</span>")
-  |> dt.merge_fragments_merge_mode(dt.Morph)
-  |> dt.merge_fragments_settle_duration(300)
-  |> dt.merge_fragments_view_transition(False)
-  |> dt.merge_fragments_end
-  |> dt.event_to_string
+  ds_sse.merge_fragments(fragments: "<span>1</span>")
+  |> ds_sse.merge_fragments_merge_mode(ds_sse.Morph)
+  |> ds_sse.merge_fragments_settle_duration(300)
+  |> ds_sse.merge_fragments_view_transition(False)
+  |> ds_sse.merge_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -59,9 +59,9 @@ pub fn remove_fragments_minimal_test() {
 data: selector #target
 "
 
-  dt.remove_fragments("#target")
-  |> dt.remove_fragments_end
-  |> dt.event_to_string
+  ds_sse.remove_fragments("#target")
+  |> ds_sse.remove_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -75,13 +75,13 @@ data: settleDuration 500
 data: useViewTransition true
 "
 
-  dt.remove_fragments("#target")
-  |> dt.remove_fragments_event_id("123")
-  |> dt.remove_fragments_retry(2000)
-  |> dt.remove_fragments_settle_duration(500)
-  |> dt.remove_fragments_view_transition(True)
-  |> dt.remove_fragments_end
-  |> dt.event_to_string
+  ds_sse.remove_fragments("#target")
+  |> ds_sse.remove_fragments_event_id("123")
+  |> ds_sse.remove_fragments_retry(2000)
+  |> ds_sse.remove_fragments_settle_duration(500)
+  |> ds_sse.remove_fragments_view_transition(True)
+  |> ds_sse.remove_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -91,11 +91,11 @@ pub fn remove_fragments_defaults_test() {
 data: selector #target
 "
 
-  dt.remove_fragments("#target")
-  |> dt.remove_fragments_settle_duration(300)
-  |> dt.remove_fragments_view_transition(False)
-  |> dt.remove_fragments_end
-  |> dt.event_to_string
+  ds_sse.remove_fragments("#target")
+  |> ds_sse.remove_fragments_settle_duration(300)
+  |> ds_sse.remove_fragments_view_transition(False)
+  |> ds_sse.remove_fragments_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -107,9 +107,9 @@ data: signals {\"name\":\"sam\"}
 
   let json = json.object([#("name", json.string("sam"))])
 
-  dt.merge_signals(json)
-  |> dt.merge_signals_end
-  |> dt.event_to_string
+  ds_sse.merge_signals(json)
+  |> ds_sse.merge_signals_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -124,12 +124,12 @@ data: signals {\"name\":\"sam\"}
 
   let json = json.object([#("name", json.string("sam"))])
 
-  dt.merge_signals(json)
-  |> dt.merge_signals_event_id("123")
-  |> dt.merge_signals_only_if_missing(True)
-  |> dt.merge_signals_retry(2000)
-  |> dt.merge_signals_end
-  |> dt.event_to_string
+  ds_sse.merge_signals(json)
+  |> ds_sse.merge_signals_event_id("123")
+  |> ds_sse.merge_signals_only_if_missing(True)
+  |> ds_sse.merge_signals_retry(2000)
+  |> ds_sse.merge_signals_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -141,10 +141,10 @@ data: signals {\"name\":\"sam\"}
 
   let json = json.object([#("name", json.string("sam"))])
 
-  dt.merge_signals(json)
-  |> dt.merge_signals_only_if_missing(False)
-  |> dt.merge_signals_end
-  |> dt.event_to_string
+  ds_sse.merge_signals(json)
+  |> ds_sse.merge_signals_only_if_missing(False)
+  |> ds_sse.merge_signals_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -155,9 +155,9 @@ data: paths user.name
 data: paths user.email
 "
 
-  dt.remove_signals(["user.name", "user.email"])
-  |> dt.remove_signals_end
-  |> dt.event_to_string
+  ds_sse.remove_signals(["user.name", "user.email"])
+  |> ds_sse.remove_signals_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -170,11 +170,11 @@ data: paths user.name
 data: paths user.email
 "
 
-  dt.remove_signals(["user.name", "user.email"])
-  |> dt.remove_signals_event_id("123")
-  |> dt.remove_signals_retry(2000)
-  |> dt.remove_signals_end
-  |> dt.event_to_string
+  ds_sse.remove_signals(["user.name", "user.email"])
+  |> ds_sse.remove_signals_event_id("123")
+  |> ds_sse.remove_signals_retry(2000)
+  |> ds_sse.remove_signals_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -184,9 +184,9 @@ pub fn execute_script_minimal_test() {
 data: script window.location = \"https://data-star.dev\"
 "
 
-  dt.execute_script("window.location = \"https://data-star.dev\"")
-  |> dt.execute_script_end
-  |> dt.event_to_string
+  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
+  |> ds_sse.execute_script_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -200,13 +200,13 @@ data: attributes type text/javascript
 data: script window.location = \"https://data-star.dev\"
 "
 
-  dt.execute_script("window.location = \"https://data-star.dev\"")
-  |> dt.execute_script_event_id("123")
-  |> dt.execute_script_retry(2000)
-  |> dt.execute_script_auto_remove(False)
-  |> dt.execute_script_attributes([#("type", "text/javascript")])
-  |> dt.execute_script_end
-  |> dt.event_to_string
+  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
+  |> ds_sse.execute_script_event_id("123")
+  |> ds_sse.execute_script_retry(2000)
+  |> ds_sse.execute_script_auto_remove(False)
+  |> ds_sse.execute_script_attributes([#("type", "text/javascript")])
+  |> ds_sse.execute_script_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -216,11 +216,11 @@ pub fn execute_script_defaults_test() {
 data: script window.location = \"https://data-star.dev\"
 "
 
-  dt.execute_script("window.location = \"https://data-star.dev\"")
-  |> dt.execute_script_auto_remove(True)
-  |> dt.execute_script_attributes([])
-  |> dt.execute_script_end
-  |> dt.event_to_string
+  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
+  |> ds_sse.execute_script_auto_remove(True)
+  |> ds_sse.execute_script_attributes([])
+  |> ds_sse.execute_script_end
+  |> ds_sse.event_to_string
   |> should.equal(expected)
 }
 
@@ -235,10 +235,10 @@ data: selector #id2
 "
 
   [
-    dt.merge_fragments("<span>Hello</span>") |> dt.merge_fragments_end,
-    dt.remove_fragments("#id2") |> dt.remove_fragments_end,
+    ds_sse.merge_fragments("<span>Hello</span>") |> ds_sse.merge_fragments_end,
+    ds_sse.remove_fragments("#id2") |> ds_sse.remove_fragments_end,
   ]
-  |> dt.events_to_string
+  |> ds_sse.events_to_string
   |> should.equal(expected)
 }
 
@@ -255,13 +255,13 @@ data: fragments <span>Hello</span>
 "
 
   [
-    dt.remove_fragments("#error")
-      |> dt.remove_fragments_end,
-    dt.merge_fragments("<span>Hello</span>")
-      |> dt.merge_fragments_selector("#notice")
-      |> dt.merge_fragments_merge_mode(dt.Inner)
-      |> dt.merge_fragments_end,
+    ds_sse.remove_fragments("#error")
+      |> ds_sse.remove_fragments_end,
+    ds_sse.merge_fragments("<span>Hello</span>")
+      |> ds_sse.merge_fragments_selector("#notice")
+      |> ds_sse.merge_fragments_merge_mode(ds_sse.Inner)
+      |> ds_sse.merge_fragments_end,
   ]
-  |> dt.events_to_string
+  |> ds_sse.events_to_string
   |> should.equal(expected)
 }
