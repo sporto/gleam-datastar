@@ -1,0 +1,5 @@
+default:
+	just --list
+
+changelog:
+	git cliff --output CHANGELOG.md

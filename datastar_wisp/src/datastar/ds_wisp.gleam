@@ -1,8 +1,8 @@
-import datastar
+import datastar/ds_sse
 import wisp
 
-pub fn send(response: wisp.Response, events: List(datastar.Event)) {
-  let body = datastar.events_to_string(events)
+pub fn send(response: wisp.Response, events: List(ds_sse.Event)) {
+  let body = ds_sse.events_to_string(events)
 
   response
   |> wisp.string_body(body)
