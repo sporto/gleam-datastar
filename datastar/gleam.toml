@@ -1,5 +1,5 @@
 name = "datastar"
-version = "2.0.0"
+version = "3.0.0"
 
 description = "Gleam bindings for https://data-star.dev/"
 licences = ["MIT"]
