@@ -1,3 +1,7 @@
+//// This module provides functions to work with Datastar server sent events.
+////
+//// See reference here <https://data-star.dev/reference/sse_events>.
+
 // Refer to https://github.com/starfederation/datastar/blob/develop/sdk/README.md
 
 import gleam/bool
@@ -57,8 +61,9 @@ type Line {
   LineRetry(Int)
 }
 
-/// SSE Events that can be send to the client
-pub type Event {
+/// SSE Events that can be send to the client.
+/// Like `datastar-merge-fragments`.
+pub opaque type Event {
   EventMergeFragment(MergeFragmentConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
   EventMergeSignals(MergeSignalsConfig)
@@ -134,11 +139,11 @@ pub fn events_to_string(events events: List(Event)) {
   |> string.append("\n")
 }
 
-pub type MergeFragmentConfig {
+pub opaque type MergeFragmentConfig {
   MergeFragmentConfig(fragments: String, options: MergeFragmentOptions)
 }
 
-pub type MergeFragmentOptions {
+pub opaque type MergeFragmentOptions {
   MergeFragmentOptions(
     event_id: Option(String),
     merge_mode: MergeMode,
@@ -269,11 +274,11 @@ pub fn merge_fragments_end(config: MergeFragmentConfig) -> Event {
   EventMergeFragment(config)
 }
 
-pub type RemoveFragmentsConfig {
+pub opaque type RemoveFragmentsConfig {
   RemoveFragmentsConfig(selector: String, options: RemoveFragmentsOptions)
 }
 
-pub type RemoveFragmentsOptions {
+pub opaque type RemoveFragmentsOptions {
   RemoveFragmentsOptions(
     event_id: Option(String),
     retry: Option(Int),
@@ -363,11 +368,11 @@ pub fn remove_fragments_end(config: RemoveFragmentsConfig) {
   EventRemoveFragments(config)
 }
 
-pub type MergeSignalsConfig {
+pub opaque type MergeSignalsConfig {
   MergeSignalsConfig(signals: Json, options: MergeSignalsOptions)
 }
 
-pub type MergeSignalsOptions {
+pub opaque type MergeSignalsOptions {
   MergeSignalsOptions(
     event_id: Option(String),
     retry: Option(Int),
@@ -446,11 +451,11 @@ pub fn merge_signals_end(config: MergeSignalsConfig) {
   EventMergeSignals(config)
 }
 
-pub type RemoveSignalsConfig {
+pub opaque type RemoveSignalsConfig {
   RemoveSignalsConfig(signals: List(String), options: RemoveSignalsOptions)
 }
 
-pub type RemoveSignalsOptions {
+pub opaque type RemoveSignalsOptions {
   RemoveSignalsOptions(event_id: Option(String), retry: Option(Int))
 }
 
@@ -506,11 +511,11 @@ pub fn remove_signals_end(config: RemoveSignalsConfig) {
   EventRemoveSignals(config)
 }
 
-pub type ExecuteScriptConfig {
+pub opaque type ExecuteScriptConfig {
   ExecuteScriptConfig(script: String, options: ExecuteScriptOptions)
 }
 
-pub type ExecuteScriptOptions {
+pub opaque type ExecuteScriptOptions {
   ExecuteScriptOptions(
     attributes: List(#(String, String)),
     auto_remove: Bool,

@@ -3,3 +3,6 @@ default:
 
 changelog:
 	git cliff --output CHANGELOG.md
+
+docs:
+	gleam docs build
