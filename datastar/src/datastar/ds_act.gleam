@@ -9,6 +9,7 @@ import gleam/option.{type Option, None, Some}
 pub opaque type Method {
   Delete
   Get
+  Patch
   Post
   Put
 }
@@ -17,6 +18,7 @@ fn method_to_code(method: Method) -> String {
   case method {
     Delete -> "delete"
     Get -> "get"
+    Patch -> "patch"
     Post -> "post"
     Put -> "put"
   }
@@ -44,7 +46,7 @@ pub opaque type ActionRestConfig {
   )
 }
 
-fn action_rest_config(method, url) {
+fn rest_config(method, url) {
   ActionRestConfig(
     method:,
     url:,
@@ -133,7 +135,7 @@ fn add_retry_max_count(options: ActionRestConfig) {
 }
 
 @internal
-pub fn action_rest_config_to_string(options: ActionRestConfig) {
+pub fn rest_config_to_string(options: ActionRestConfig) {
   [
     add_content_type(options),
     add_include_local(options),
@@ -150,20 +152,36 @@ pub fn action_rest_config_to_string(options: ActionRestConfig) {
   |> json.to_string
 }
 
+pub fn clipboard(text) {
+  "@clipboard('" <> text <> "')"
+}
+
 pub fn delete(url) {
-  action_rest_config(Delete, url)
+  rest_config(Delete, url)
 }
 
 pub fn get(url) {
-  action_rest_config(Get, url)
+  rest_config(Get, url)
 }
 
 pub fn post(url) {
-  action_rest_config(Post, url)
+  rest_config(Post, url)
+}
+
+pub fn patch(url) {
+  rest_config(Patch, url)
 }
 
 pub fn put(url) {
-  action_rest_config(Put, url)
+  rest_config(Put, url)
+}
+
+pub fn set_all(signals: String, expression: String) {
+  "@setAll('" <> signals <> "', " <> expression <> ")"
+}
+
+pub fn toggle_all(signals: String) {
+  "@toggleAll('" <> signals <> "')"
 }
 
 pub fn with_content_type_form(config: ActionRestConfig) {
@@ -174,8 +192,8 @@ pub fn with_headers(config, headers) {
   ActionRestConfig(..config, headers:)
 }
 
-pub fn action_end(config: ActionRestConfig) {
+pub fn end(config: ActionRestConfig) {
   let method_code = method_to_code(config.method)
-  let options = action_rest_config_to_string(config)
+  let options = rest_config_to_string(config)
   "@" <> method_code <> "('" <> config.url <> "', " <> options <> ")"
 }
