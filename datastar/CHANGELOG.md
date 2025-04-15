@@ -1,5 +1,8 @@
-# Changelog
+## [3.0.0] - 2025-04-15
 
-## v2.0.0
+### Features
 
-- merge_signals takes a `JSON` type.
+- [**breaking**] Move datastar module to datastar_sse
+- Add datastar action module
+- Add other utility actions
+
