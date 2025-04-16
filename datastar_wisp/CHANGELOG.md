@@ -1,5 +1,6 @@
-# Changelog
+## [unreleased]
 
-## v2.0.0
+### Features
 
-- use datastar v2.0.0
+- Update datastar_wisp to use v3
+
