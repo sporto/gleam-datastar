@@ -7,16 +7,22 @@ Gleam bindings for 🚀 <https://data-star.dev/>.
 
 This library provides Gleam functions for building **server sent events (SSE)** in the backend to use with **Datastar**.
 
+```sh
+gleam add datastar
+```
+
 ```gleam
+import datastar/ds_sse
+
 [
-  remove_fragments("#error")
-  |> remove_fragments_end,
-  merge_fragments("<span>Hello</span>")
-  |> merge_fragments_selector("#notice")
-  |> merge_fragments_merge_mode(Inner)
-  |> merge_fragments_end,
+  ds_sse.remove_fragments("#error")
+  |> ds_sse.remove_fragments_end,
+  ds_sse.merge_fragments("<span>Hello</span>")
+  |> ds_sse.merge_fragments_selector("#notice")
+  |> ds_sse.merge_fragments_merge_mode(Inner)
+  |> ds_sse.merge_fragments_end,
 ]
-|> events_to_string
+|> ds_sse.events_to_string
 ```
 
 This generates:
