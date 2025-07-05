@@ -17,10 +17,10 @@ import datastar/ds_sse
 [
   ds_sse.remove_fragments("#error")
   |> ds_sse.remove_fragments_end,
-  ds_sse.merge_fragments("<span>Hello</span>")
-  |> ds_sse.merge_fragments_selector("#notice")
-  |> ds_sse.merge_fragments_merge_mode(Inner)
-  |> ds_sse.merge_fragments_end,
+  ds_sse.patch_elements("<span>Hello</span>")
+  |> ds_sse.patch_elements_selector("#notice")
+  |> ds_sse.patch_elements_merge_mode(Inner)
+  |> ds_sse.patch_elements_end,
 ]
 |> ds_sse.events_to_string
 ```
@@ -31,8 +31,8 @@ This generates:
 event: datastar-remove-fragments
 data: selector #error
 
-event: datastar-merge-fragments
-data: mergeMode inner
+event: datastar-patch-elements
+data: mode inner
 data: selector #notice
 data: fragments <span>Hello</span>
 ```

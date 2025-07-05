@@ -13,33 +13,33 @@ import gleam/string
 
 /// The merge mode used by merge fragments
 pub type MergeMode {
-  Morph
+  After
+  Append
+  Before
   Inner
   Outer
   Prepend
-  Append
-  Before
-  After
-  UpsertAttributes
+  Replace
+  Remove
 }
 
 fn merge_mode_to_string(merge_mode: MergeMode) {
   case merge_mode {
-    Morph -> "morph"
+    After -> "after"
+    Append -> "append"
+    Before -> "before"
     Inner -> "inner"
     Outer -> "outer"
     Prepend -> "prepend"
-    Append -> "append"
-    Before -> "before"
-    After -> "after"
-    UpsertAttributes -> "upsertAttributes"
+    Replace -> "replace"
+    Remove -> "remove"
   }
 }
 
 type EventType {
   ExecuteScript
-  MergeFragments
-  MergeSignals
+  PatchElements
+  PatchSignals
   RemoveFragments
   RemoveSignals
 }
@@ -47,8 +47,8 @@ type EventType {
 fn event_type_to_string(event_type: EventType) {
   case event_type {
     ExecuteScript -> "datastar-execute-script"
-    MergeFragments -> "datastar-merge-fragments"
-    MergeSignals -> "datastar-merge-signals"
+    PatchElements -> "datastar-patch-elements"
+    PatchSignals -> "datastar-patch-signals"
     RemoveFragments -> "datastar-remove-fragments"
     RemoveSignals -> "datastar-remove-signals"
   }
@@ -62,11 +62,11 @@ type Line {
 }
 
 /// SSE Events that can be send to the client.
-/// Like `datastar-merge-fragments`.
+/// Like `datastar-patch-elements`.
 pub opaque type Event {
-  EventMergeFragment(MergeFragmentConfig)
+  EventPatchElement(PatchElementConfig)
   EventRemoveFragments(RemoveFragmentsConfig)
-  EventMergeSignals(MergeSignalsConfig)
+  EventPatchSignals(PatchSignalsConfig)
   EventRemoveSignals(RemoveSignalsConfig)
   EventExecuteScript(ExecuteScriptConfig)
 }
@@ -103,9 +103,9 @@ fn event_lines_to_strings(lines lines: List(Line)) {
 ///
 pub fn event_to_string(event: Event) -> String {
   case event {
-    EventMergeFragment(config) -> merge_fragments_event_to_string(config)
+    EventPatchElement(config) -> patch_elements_event_to_string(config)
     EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
-    EventMergeSignals(config) -> merge_signals_event_to_string(config)
+    EventPatchSignals(config) -> patch_signals_event_to_string(config)
     EventRemoveSignals(config) -> remove_signals_event_to_string(config)
     EventExecuteScript(config) -> execture_script_event_to_string(config)
   }
@@ -115,8 +115,8 @@ pub fn event_to_string(event: Event) -> String {
 ///
 /// ```gleam
 /// [
-///   merge_fragments("<span>Hello</span>")
-///   |> merge_fragments_end,
+///   patch_elements("<span>Hello</span>")
+///   |> patch_elements_end,
 ///   remove_fragments("#target")
 ///   |> remove_fragments_end,
 /// ]
@@ -124,7 +124,7 @@ pub fn event_to_string(event: Event) -> String {
 /// ```
 /// Generates:
 /// ```text
-/// event: datastar-merge-fragments
+/// event: datastar-patch-elements
 /// data: fragments <span>Hello</span>
 ///
 /// event: datastar-remove-fragments
@@ -139,12 +139,12 @@ pub fn events_to_string(events events: List(Event)) {
   |> string.append("\n")
 }
 
-pub opaque type MergeFragmentConfig {
-  MergeFragmentConfig(fragments: String, options: MergeFragmentOptions)
+pub opaque type PatchElementConfig {
+  PatchElementConfig(fragments: String, options: PatchElementOptions)
 }
 
-pub opaque type MergeFragmentOptions {
-  MergeFragmentOptions(
+pub opaque type PatchElementOptions {
+  PatchElementOptions(
     event_id: Option(String),
     merge_mode: MergeMode,
     retry: Option(Int),
@@ -157,121 +157,121 @@ pub opaque type MergeFragmentOptions {
 /// Event to send new fragments to the client
 ///
 /// ```gleam
-/// merge_fragments("<span>1</span>")
-/// |> merge_fragments_selector("#feed")
-/// |> merge_fragments_end
+/// patch_elements("<span>1</span>")
+/// |> patch_elements_selector("#feed")
+/// |> patch_elements_end
 /// ```
 /// Generates:
 /// ```text
-/// event: datastar-merge-fragments
+/// event: datastar-patch-elements
 /// data: selector #feed
 /// data: fragments <span>1</span>
 ///
 /// ```
-pub fn merge_fragments(fragments fragments: String) {
+pub fn patch_elements(fragments fragments: String) {
   let options =
-    MergeFragmentOptions(
+    PatchElementOptions(
       event_id: None,
-      merge_mode: Morph,
+      merge_mode: Outer,
       retry: None,
       selector: None,
       settle_duration: 300,
       view_transition: False,
     )
 
-  MergeFragmentConfig(fragments:, options:)
+  PatchElementConfig(fragments:, options:)
 }
 
 /// ```
-/// |> merge_fragments_event_id("123"),
+/// |> patch_elements_event_id("123"),
 /// ```
 /// Generates:
 /// ```text
 /// id: 123
 /// ```
-pub fn merge_fragments_event_id(
-  config: MergeFragmentConfig,
+pub fn patch_elements_event_id(
+  config: PatchElementConfig,
   value: String,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, event_id: Some(value)),
+    options: PatchElementOptions(..config.options, event_id: Some(value)),
   )
 }
 
 /// ```gleam
-/// |> merge_fragments_merge_mode(MergeMode.Inner),
+/// |> patch_elements_merge_mode(MergeMode.Inner),
 /// ```
 /// Generates:
 /// ```text
-/// data: mergeMode inner
+/// data: mode inner
 /// ```
-pub fn merge_fragments_merge_mode(
-  config: MergeFragmentConfig,
+pub fn patch_elements_merge_mode(
+  config: PatchElementConfig,
   value: MergeMode,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, merge_mode: value),
+    options: PatchElementOptions(..config.options, merge_mode: value),
   )
 }
 
 /// ```gleam
-/// |> merge_fragments_retry(3000),
+/// |> patch_elements_retry(3000),
 /// ```
 /// Generates:
 /// ```text
 /// retry: 3000
 /// ```
-pub fn merge_fragments_retry(
-  config: MergeFragmentConfig,
+pub fn patch_elements_retry(
+  config: PatchElementConfig,
   value: Int,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, retry: Some(value)),
+    options: PatchElementOptions(..config.options, retry: Some(value)),
   )
 }
 
 /// ```gleam
-/// |> merge_fragments_selector("#feed"),
+/// |> patch_elements_selector("#feed"),
 /// ```
 /// Generates:
 /// ```text
 /// data: selector #feed
 /// ```
-pub fn merge_fragments_selector(
-  config: MergeFragmentConfig,
+pub fn patch_elements_selector(
+  config: PatchElementConfig,
   value: String,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, selector: Some(value)),
+    options: PatchElementOptions(..config.options, selector: Some(value)),
   )
 }
 
-pub fn merge_fragments_settle_duration(
-  config: MergeFragmentConfig,
+pub fn patch_elements_settle_duration(
+  config: PatchElementConfig,
   value: Int,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, settle_duration: value),
+    options: PatchElementOptions(..config.options, settle_duration: value),
   )
 }
 
-pub fn merge_fragments_view_transition(
-  config: MergeFragmentConfig,
+pub fn patch_elements_view_transition(
+  config: PatchElementConfig,
   value: Bool,
-) -> MergeFragmentConfig {
-  MergeFragmentConfig(
+) -> PatchElementConfig {
+  PatchElementConfig(
     ..config,
-    options: MergeFragmentOptions(..config.options, view_transition: value),
+    options: PatchElementOptions(..config.options, view_transition: value),
   )
 }
 
-pub fn merge_fragments_end(config: MergeFragmentConfig) -> Event {
-  EventMergeFragment(config)
+pub fn patch_elements_end(config: PatchElementConfig) -> Event {
+  EventPatchElement(config)
 }
 
 pub opaque type RemoveFragmentsConfig {
@@ -368,87 +368,87 @@ pub fn remove_fragments_end(config: RemoveFragmentsConfig) {
   EventRemoveFragments(config)
 }
 
-pub opaque type MergeSignalsConfig {
-  MergeSignalsConfig(signals: Json, options: MergeSignalsOptions)
+pub opaque type PatchSignalsConfig {
+  PatchSignalsConfig(signals: Json, options: PatchSignalsOptions)
 }
 
-pub opaque type MergeSignalsOptions {
-  MergeSignalsOptions(
+pub opaque type PatchSignalsOptions {
+  PatchSignalsOptions(
     event_id: Option(String),
     retry: Option(Int),
     only_if_missing: Bool,
   )
 }
 
-/// Generate a `datastar-merge-signals` event
+/// Generate a `datastar-patch-signals` event
 ///
 /// ```gleam
 /// let json = json.object([
 ///   #("name", json.string("sam"))
 /// ])
 ///
-/// merge_signals(json)
-/// |> merge_signals_end
+/// patch_signals(json)
+/// |> patch_signals_end
 /// ```
 /// Generates:
 /// ```text
-/// event: datastar-merge-signals
+/// event: datastar-patch-signals
 /// data: signals {\"name\":\"Sam\"}
 ///
 /// ```
-pub fn merge_signals(signals: Json) {
+pub fn patch_signals(signals: Json) {
   // TODO signals should be json
   let options =
-    MergeSignalsOptions(event_id: None, retry: None, only_if_missing: False)
+    PatchSignalsOptions(event_id: None, retry: None, only_if_missing: False)
 
-  MergeSignalsConfig(signals:, options:)
+  PatchSignalsConfig(signals:, options:)
 }
 
 /// ```
 /// ...
-/// |> merge_signals_event_id("123")
+/// |> patch_signals_event_id("123")
 /// ```
 /// Generates:
 /// ```text
 /// id: 123
 /// ```
-pub fn merge_signals_event_id(config: MergeSignalsConfig, value: String) {
-  MergeSignalsConfig(
+pub fn patch_signals_event_id(config: PatchSignalsConfig, value: String) {
+  PatchSignalsConfig(
     ..config,
-    options: MergeSignalsOptions(..config.options, event_id: Some(value)),
+    options: PatchSignalsOptions(..config.options, event_id: Some(value)),
   )
 }
 
 /// ```gleam
-/// |> merge_signals_retry(3000),
+/// |> patch_signals_retry(3000),
 /// ```
 /// Generates:
 /// ```text
 /// retry: 3000
 /// ```
-pub fn merge_signals_retry(config: MergeSignalsConfig, value: Int) {
-  MergeSignalsConfig(
+pub fn patch_signals_retry(config: PatchSignalsConfig, value: Int) {
+  PatchSignalsConfig(
     ..config,
-    options: MergeSignalsOptions(..config.options, retry: Some(value)),
+    options: PatchSignalsOptions(..config.options, retry: Some(value)),
   )
 }
 
 /// ```gleam
-/// |> merge_signals_only_if_missing(True),
+/// |> patch_signals_only_if_missing(True),
 /// ```
 /// Generates:
 /// ```text
 /// data: onlyIfMissing true
 /// ```
-pub fn merge_signals_only_if_missing(config: MergeSignalsConfig, value: Bool) {
-  MergeSignalsConfig(
+pub fn patch_signals_only_if_missing(config: PatchSignalsConfig, value: Bool) {
+  PatchSignalsConfig(
     ..config,
-    options: MergeSignalsOptions(..config.options, only_if_missing: value),
+    options: PatchSignalsOptions(..config.options, only_if_missing: value),
   )
 }
 
-pub fn merge_signals_end(config: MergeSignalsConfig) {
-  EventMergeSignals(config)
+pub fn patch_signals_end(config: PatchSignalsConfig) {
+  EventPatchSignals(config)
 }
 
 pub opaque type RemoveSignalsConfig {
@@ -614,9 +614,9 @@ pub fn execute_script_end(config: ExecuteScriptConfig) {
 }
 
 // Build the event strings
-fn merge_fragments_event_to_string(config: MergeFragmentConfig) {
+fn patch_elements_event_to_string(config: PatchElementConfig) {
   [
-    [LineEventType(MergeFragments)],
+    [LineEventType(PatchElements)],
     add_event_id(config.options.event_id),
     add_retry(config.options.retry),
     add_merge_mode(config.options.merge_mode),
@@ -642,9 +642,9 @@ fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
   |> event_lines_to_strings
 }
 
-fn merge_signals_event_to_string(config: MergeSignalsConfig) {
+fn patch_signals_event_to_string(config: PatchSignalsConfig) {
   [
-    [LineEventType(MergeSignals)],
+    [LineEventType(PatchSignals)],
     add_event_id(config.options.event_id),
     add_retry(config.options.retry),
     add_only_if_missing(config.options.only_if_missing),
@@ -717,8 +717,8 @@ fn add_event_id(maybe: Option(String)) {
 
 fn add_merge_mode(merge_mode: MergeMode) {
   case merge_mode {
-    Morph -> []
-    _ -> [LineData("mergeMode " <> merge_mode_to_string(merge_mode))]
+    Outer -> []
+    _ -> [LineData("mode " <> merge_mode_to_string(merge_mode))]
   }
 }
 
