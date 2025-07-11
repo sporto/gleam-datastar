@@ -3,11 +3,6 @@ import gleeunit/should
 
 const url = "ur.l"
 
-pub fn clipboard_test() {
-  ds_act.clipboard("Hello")
-  |> should.equal("@clipboard('Hello')")
-}
-
 pub fn get_test() {
   ds_act.get(url)
   |> ds_act.end

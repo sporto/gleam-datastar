@@ -1,4 +1,4 @@
-// https://data-star.dev/reference/action_plugins
+// https://data-star.dev/reference/actions
 
 import gleam/dict
 import gleam/function
@@ -150,10 +150,6 @@ pub fn rest_config_to_string(options: ActionRestConfig) {
   |> list.flatten
   |> json.object
   |> json.to_string
-}
-
-pub fn clipboard(text) {
-  "@clipboard('" <> text <> "')"
 }
 
 pub fn delete(url) {
