@@ -1,6 +1,5 @@
 import datastar/ds_sse
 import datastar/ds_wisp
-import gleeunit/should
 import wisp
 import wisp/testing
 
@@ -21,10 +20,9 @@ pub fn send_test() {
     #("content-type", "text/event-stream"),
   ]
 
-  response.headers
-  |> should.equal(expected_headers)
+  assert response.headers == expected_headers
 
-  response
-  |> testing.string_body
-  |> should.equal("event: datastar-patch-elements\ndata: elements <div />\n\n")
+  assert response
+    |> testing.string_body
+    == "event: datastar-patch-elements\ndata: elements <div />\n\n"
 }
