@@ -2,7 +2,7 @@
 # You typically do not need to edit this file
 
 packages = [
-  { name = "datastar", version = "3.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], otp_app = "datastar", source = "hex", outer_checksum = "AAAAAF863D02C67D04B52CB1273621D0CF4662B1B004E3F0EA8FA6C0F45DDC5C" },
+  { name = "datastar", version = "4.0.0", build_tools = ["gleam"], requirements = ["gleam_json", "gleam_stdlib"], otp_app = "datastar", source = "hex", outer_checksum = "2BE36B78D995A7E1A2D27E6A78D499306A38FA5B20059156DF651F0ED932097A" },
   { name = "directories", version = "1.1.0", build_tools = ["gleam"], requirements = ["envoy", "gleam_stdlib", "platform", "simplifile"], otp_app = "directories", source = "hex", outer_checksum = "BDA521A4EB9EE3A7894F0DC863797878E91FF5C7826F7084B2E731E208BDB076" },
   { name = "envoy", version = "1.0.2", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "envoy", source = "hex", outer_checksum = "95FD059345AA982E89A0B6E2A3BF1CF43E17A7048DCD85B5B65D3B9E4E39D359" },
   { name = "exception", version = "2.0.0", build_tools = ["gleam"], requirements = ["gleam_stdlib"], otp_app = "exception", source = "hex", outer_checksum = "F5580D584F16A20B7FCDCABF9E9BE9A2C1F6AC4F9176FA6DD0B63E3B20D450AA" },
@@ -28,7 +28,7 @@ packages = [
 ]
 
 [requirements]
-datastar = { version = ">= 3.0.0 and < 4.0.0" }
+datastar = { version = ">= 4.0.0 and < 5.0.0" }
 gleam_stdlib = { version = ">= 0.34.0 and < 2.0.0" }
 gleeunit = { version = ">= 1.0.0 and < 2.0.0" }
 wisp = { version = ">= 1.0.0 and < 2.0.0" }
