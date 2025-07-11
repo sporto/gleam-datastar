@@ -105,36 +105,6 @@ data: signals {\"name\":\"sam\"}
   |> should.equal(expected)
 }
 
-pub fn remove_signals_minimal_test() {
-  let expected =
-    "event: datastar-remove-signals
-data: paths user.name
-data: paths user.email
-"
-
-  ds_sse.remove_signals(["user.name", "user.email"])
-  |> ds_sse.remove_signals_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn remove_signals_maximal_test() {
-  let expected =
-    "event: datastar-remove-signals
-id: 123
-retry: 2000
-data: paths user.name
-data: paths user.email
-"
-
-  ds_sse.remove_signals(["user.name", "user.email"])
-  |> ds_sse.remove_signals_event_id("123")
-  |> ds_sse.remove_signals_retry(2000)
-  |> ds_sse.remove_signals_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
 pub fn execute_script_minimal_test() {
   let expected =
     "event: datastar-execute-script

@@ -40,7 +40,6 @@ type EventType {
   ExecuteScript
   PatchElements
   PatchSignals
-  RemoveSignals
 }
 
 fn event_type_to_string(event_type: EventType) {
@@ -48,7 +47,6 @@ fn event_type_to_string(event_type: EventType) {
     ExecuteScript -> "datastar-execute-script"
     PatchElements -> "datastar-patch-elements"
     PatchSignals -> "datastar-patch-signals"
-    RemoveSignals -> "datastar-remove-signals"
   }
 }
 
@@ -64,7 +62,6 @@ type Line {
 pub opaque type Event {
   EventPatchElement(PatchElementConfig)
   EventPatchSignals(PatchSignalsConfig)
-  EventRemoveSignals(RemoveSignalsConfig)
   EventExecuteScript(ExecuteScriptConfig)
 }
 
@@ -102,7 +99,6 @@ pub fn event_to_string(event: Event) -> String {
   case event {
     EventPatchElement(config) -> patch_elements_event_to_string(config)
     EventPatchSignals(config) -> patch_signals_event_to_string(config)
-    EventRemoveSignals(config) -> remove_signals_event_to_string(config)
     EventExecuteScript(config) -> execture_script_event_to_string(config)
   }
 }
@@ -227,7 +223,6 @@ pub fn patch_elements_merge_mode(
   value: MergeMode,
 ) -> PatchElementConfig {
   PatchElementConfig(
-    ..config,
     options: PatchElementOptions(..config.options, merge_mode: value),
   )
 }
@@ -270,7 +265,6 @@ pub fn patch_elements_settle_duration(
   value: Int,
 ) -> PatchElementConfig {
   PatchElementConfig(
-    ..config,
     options: PatchElementOptions(..config.options, settle_duration: value),
   )
 }
@@ -280,7 +274,6 @@ pub fn patch_elements_view_transition(
   value: Bool,
 ) -> PatchElementConfig {
   PatchElementConfig(
-    ..config,
     options: PatchElementOptions(..config.options, view_transition: value),
   )
 }
@@ -370,66 +363,6 @@ pub fn patch_signals_only_if_missing(config: PatchSignalsConfig, value: Bool) {
 
 pub fn patch_signals_end(config: PatchSignalsConfig) {
   EventPatchSignals(config)
-}
-
-pub opaque type RemoveSignalsConfig {
-  RemoveSignalsConfig(signals: List(String), options: RemoveSignalsOptions)
-}
-
-pub opaque type RemoveSignalsOptions {
-  RemoveSignalsOptions(event_id: Option(String), retry: Option(Int))
-}
-
-/// Generate a `datastar-remove-signals` event
-///
-/// ```gleam
-/// remove_signals(["user.name", "user.email"])
-/// |> remove_signals_end
-/// ```
-/// Generates:
-/// ```text
-/// event: datastar-remove-signals
-/// data: paths user.name
-/// data: paths user.email
-///
-/// ```
-pub fn remove_signals(signals: List(String)) {
-  let options = RemoveSignalsOptions(event_id: None, retry: None)
-
-  RemoveSignalsConfig(signals:, options:)
-}
-
-/// ```
-/// ...
-/// |> remove_signals_event_id("123")
-/// ```
-/// Generates:
-/// ```text
-/// id: 123
-/// ```
-pub fn remove_signals_event_id(config: RemoveSignalsConfig, value: String) {
-  RemoveSignalsConfig(
-    ..config,
-    options: RemoveSignalsOptions(..config.options, event_id: Some(value)),
-  )
-}
-
-/// ```gleam
-/// |> remove_signals_retry(3000),
-/// ```
-/// Generates:
-/// ```text
-/// retry: 3000
-/// ```
-pub fn remove_signals_retry(config: RemoveSignalsConfig, value: Int) {
-  RemoveSignalsConfig(
-    ..config,
-    options: RemoveSignalsOptions(..config.options, retry: Some(value)),
-  )
-}
-
-pub fn remove_signals_end(config: RemoveSignalsConfig) {
-  EventRemoveSignals(config)
 }
 
 pub opaque type ExecuteScriptConfig {
@@ -557,20 +490,6 @@ fn patch_signals_event_to_string(config: PatchSignalsConfig) {
     add_retry(config.options.retry),
     add_only_if_missing(config.options.only_if_missing),
     [LineData("signals " <> json.to_string(config.signals))],
-  ]
-  |> list.flatten
-  |> event_lines_to_strings
-}
-
-fn remove_signals_event_to_string(config: RemoveSignalsConfig) {
-  let signals =
-    list.map(config.signals, fn(signal) { LineData("paths " <> signal) })
-
-  [
-    [LineEventType(RemoveSignals)],
-    add_event_id(config.options.event_id),
-    add_retry(config.options.retry),
-    signals,
   ]
   |> list.flatten
   |> event_lines_to_strings
