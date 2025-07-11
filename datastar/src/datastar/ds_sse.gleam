@@ -37,14 +37,12 @@ fn merge_mode_to_string(merge_mode: MergeMode) {
 }
 
 type EventType {
-  ExecuteScript
   PatchElements
   PatchSignals
 }
 
 fn event_type_to_string(event_type: EventType) {
   case event_type {
-    ExecuteScript -> "datastar-execute-script"
     PatchElements -> "datastar-patch-elements"
     PatchSignals -> "datastar-patch-signals"
   }
@@ -62,7 +60,6 @@ type Line {
 pub opaque type Event {
   EventPatchElement(PatchElementConfig)
   EventPatchSignals(PatchSignalsConfig)
-  EventExecuteScript(ExecuteScriptConfig)
 }
 
 fn event_line_to_string(line: Line) {
@@ -99,7 +96,6 @@ pub fn event_to_string(event: Event) -> String {
   case event {
     EventPatchElement(config) -> patch_elements_event_to_string(config)
     EventPatchSignals(config) -> patch_signals_event_to_string(config)
-    EventExecuteScript(config) -> execture_script_event_to_string(config)
   }
 }
 
@@ -365,108 +361,6 @@ pub fn patch_signals_end(config: PatchSignalsConfig) {
   EventPatchSignals(config)
 }
 
-pub opaque type ExecuteScriptConfig {
-  ExecuteScriptConfig(script: String, options: ExecuteScriptOptions)
-}
-
-pub opaque type ExecuteScriptOptions {
-  ExecuteScriptOptions(
-    attributes: List(#(String, String)),
-    auto_remove: Bool,
-    event_id: Option(String),
-    retry: Option(Int),
-  )
-}
-
-/// Generate a `datastar-execute-script` event
-///
-/// ```gleam
-/// execute_script("window.location = \"https://data-star.dev\"")
-/// |> execute_script_event_id("123")
-/// |> execute_script_end
-/// ```
-/// Generates
-/// ```text
-/// event: datastar-execute-script
-/// id: 123
-/// data: script window.location = \"https://data-star.dev\"
-/// ```
-pub fn execute_script(script: String) {
-  let options =
-    ExecuteScriptOptions(
-      attributes: [],
-      auto_remove: True,
-      event_id: None,
-      retry: None,
-    )
-
-  ExecuteScriptConfig(script:, options:)
-}
-
-/// ```gleam
-/// |> execute_script_attributes([#("type", "text/javascript")]),
-/// ```
-/// Generates:
-/// ```text
-/// data: attributes type text/javascript
-/// ```
-pub fn execute_script_attributes(
-  config: ExecuteScriptConfig,
-  value: List(#(String, String)),
-) {
-  ExecuteScriptConfig(
-    ..config,
-    options: ExecuteScriptOptions(..config.options, attributes: value),
-  )
-}
-
-/// ```gleam
-/// |> execute_script_auto_remove(False),
-/// ```
-/// Generates:
-/// ```text
-/// data: autoRemove false
-/// ```
-pub fn execute_script_auto_remove(config: ExecuteScriptConfig, value: Bool) {
-  ExecuteScriptConfig(
-    ..config,
-    options: ExecuteScriptOptions(..config.options, auto_remove: value),
-  )
-}
-
-/// ```
-/// ...
-/// |> execute_script_event_id("123")
-/// ```
-/// Generates:
-/// ```text
-/// id: 123
-/// ```
-pub fn execute_script_event_id(config: ExecuteScriptConfig, value: String) {
-  ExecuteScriptConfig(
-    ..config,
-    options: ExecuteScriptOptions(..config.options, event_id: Some(value)),
-  )
-}
-
-/// ```gleam
-/// |> execute_script_retry(3000),
-/// ```
-/// Generates:
-/// ```text
-/// retry: 3000
-/// ```
-pub fn execute_script_retry(config: ExecuteScriptConfig, value: Int) {
-  ExecuteScriptConfig(
-    ..config,
-    options: ExecuteScriptOptions(..config.options, retry: Some(value)),
-  )
-}
-
-pub fn execute_script_end(config: ExecuteScriptConfig) {
-  EventExecuteScript(config)
-}
-
 // Build the event strings
 fn patch_elements_event_to_string(config: PatchElementConfig) {
   [
@@ -493,40 +387,6 @@ fn patch_signals_event_to_string(config: PatchSignalsConfig) {
   ]
   |> list.flatten
   |> event_lines_to_strings
-}
-
-fn execture_script_event_to_string(config: ExecuteScriptConfig) {
-  [
-    [LineEventType(ExecuteScript)],
-    add_event_id(config.options.event_id),
-    add_retry(config.options.retry),
-    add_auto_remove(config.options.auto_remove),
-    add_attributes(config.options.attributes),
-    [LineData("script " <> config.script)],
-  ]
-  |> list.flatten
-  |> event_lines_to_strings
-}
-
-fn add_attributes(attributes: List(#(String, String))) {
-  attributes
-  |> list.flat_map(fn(values) {
-    let #(k, v) = values
-    case k, v {
-      "type", "module" -> []
-      _, _ -> [LineData("attributes " <> k <> " " <> v)]
-    }
-  })
-}
-
-fn add_auto_remove(value: Bool) {
-  case value {
-    True -> []
-    False -> {
-      let str = value |> bool.to_string |> string.lowercase
-      [LineData("autoRemove " <> str)]
-    }
-  }
 }
 
 fn option_to_list(option: Option(a)) {

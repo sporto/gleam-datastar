@@ -105,52 +105,6 @@ data: signals {\"name\":\"sam\"}
   |> should.equal(expected)
 }
 
-pub fn execute_script_minimal_test() {
-  let expected =
-    "event: datastar-execute-script
-data: script window.location = \"https://data-star.dev\"
-"
-
-  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
-  |> ds_sse.execute_script_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn execute_script_maximal_test() {
-  let expected =
-    "event: datastar-execute-script
-id: 123
-retry: 2000
-data: autoRemove false
-data: attributes type text/javascript
-data: script window.location = \"https://data-star.dev\"
-"
-
-  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
-  |> ds_sse.execute_script_event_id("123")
-  |> ds_sse.execute_script_retry(2000)
-  |> ds_sse.execute_script_auto_remove(False)
-  |> ds_sse.execute_script_attributes([#("type", "text/javascript")])
-  |> ds_sse.execute_script_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn execute_script_defaults_test() {
-  let expected =
-    "event: datastar-execute-script
-data: script window.location = \"https://data-star.dev\"
-"
-
-  ds_sse.execute_script("window.location = \"https://data-star.dev\"")
-  |> ds_sse.execute_script_auto_remove(True)
-  |> ds_sse.execute_script_attributes([])
-  |> ds_sse.execute_script_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-patch-elements
