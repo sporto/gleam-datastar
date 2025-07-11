@@ -130,11 +130,7 @@ pub fn events_to_string(events events: List(Event)) {
 }
 
 pub opaque type PatchElementConfig {
-  PatchElementConfig(options: PatchElementOptions)
-}
-
-pub opaque type PatchElementOptions {
-  PatchElementOptions(
+  PatchElementConfig(
     elements: Option(String),
     event_id: Option(String),
     merge_mode: MergeMode,
@@ -161,18 +157,15 @@ pub opaque type PatchElementOptions {
 ///
 /// ```
 pub fn patch_elements() {
-  let options =
-    PatchElementOptions(
-      elements: None,
-      event_id: None,
-      merge_mode: Outer,
-      retry: None,
-      selector: None,
-      settle_duration: 300,
-      view_transition: False,
-    )
-
-  PatchElementConfig(options:)
+  PatchElementConfig(
+    elements: None,
+    event_id: None,
+    merge_mode: Outer,
+    retry: None,
+    selector: None,
+    settle_duration: 300,
+    view_transition: False,
+  )
 }
 
 /// ```
@@ -186,9 +179,7 @@ pub fn patch_elements_elements(
   config: PatchElementConfig,
   value: String,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, elements: Some(value)),
-  )
+  PatchElementConfig(..config, elements: Some(value))
 }
 
 /// ```
@@ -202,9 +193,7 @@ pub fn patch_elements_event_id(
   config: PatchElementConfig,
   value: String,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, event_id: Some(value)),
-  )
+  PatchElementConfig(..config, event_id: Some(value))
 }
 
 /// ```gleam
@@ -218,9 +207,7 @@ pub fn patch_elements_merge_mode(
   config: PatchElementConfig,
   value: MergeMode,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, merge_mode: value),
-  )
+  PatchElementConfig(..config, merge_mode: value)
 }
 
 /// ```gleam
@@ -234,9 +221,7 @@ pub fn patch_elements_retry(
   config: PatchElementConfig,
   value: Int,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, retry: Some(value)),
-  )
+  PatchElementConfig(..config, retry: Some(value))
 }
 
 /// ```gleam
@@ -250,28 +235,21 @@ pub fn patch_elements_selector(
   config: PatchElementConfig,
   value: String,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    ..config,
-    options: PatchElementOptions(..config.options, selector: Some(value)),
-  )
+  PatchElementConfig(..config, selector: Some(value))
 }
 
 pub fn patch_elements_settle_duration(
   config: PatchElementConfig,
   value: Int,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, settle_duration: value),
-  )
+  PatchElementConfig(..config, settle_duration: value)
 }
 
 pub fn patch_elements_view_transition(
   config: PatchElementConfig,
   value: Bool,
 ) -> PatchElementConfig {
-  PatchElementConfig(
-    options: PatchElementOptions(..config.options, view_transition: value),
-  )
+  PatchElementConfig(..config, view_transition: value)
 }
 
 pub fn patch_elements_end(config: PatchElementConfig) -> Event {
@@ -365,13 +343,13 @@ pub fn patch_signals_end(config: PatchSignalsConfig) {
 fn patch_elements_event_to_string(config: PatchElementConfig) {
   [
     [LineEventType(PatchElements)],
-    add_event_id(config.options.event_id),
-    add_retry(config.options.retry),
-    add_merge_mode(config.options.merge_mode),
-    add_selector(config.options.selector),
-    add_settle_duration(config.options.settle_duration),
-    add_view_transition(config.options.view_transition),
-    add_elements(config.options.elements),
+    add_event_id(config.event_id),
+    add_retry(config.retry),
+    add_merge_mode(config.merge_mode),
+    add_selector(config.selector),
+    add_settle_duration(config.settle_duration),
+    add_view_transition(config.view_transition),
+    add_elements(config.elements),
   ]
   |> list.flatten
   |> event_lines_to_strings
