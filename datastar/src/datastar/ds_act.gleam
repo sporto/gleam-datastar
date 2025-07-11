@@ -152,30 +152,37 @@ pub fn rest_config_to_string(options: ActionRestConfig) {
   |> json.to_string
 }
 
+/// https://data-star.dev/reference/actions#delete
 pub fn delete(url) {
   rest_config(Delete, url)
 }
 
+/// https://data-star.dev/reference/actions#get
 pub fn get(url) {
   rest_config(Get, url)
 }
 
+/// https://data-star.dev/reference/actions#post
 pub fn post(url) {
   rest_config(Post, url)
 }
 
+/// https://data-star.dev/reference/actions#patch
 pub fn patch(url) {
   rest_config(Patch, url)
 }
 
+/// https://data-star.dev/reference/actions#put
 pub fn put(url) {
   rest_config(Put, url)
 }
 
+/// https://data-star.dev/reference/actions#setall
 pub fn set_all(signals: String, expression: String) {
   "@setAll('" <> signals <> "', " <> expression <> ")"
 }
 
+/// https://data-star.dev/reference/actions#toggleall
 pub fn toggle_all(signals: String) {
   "@toggleAll('" <> signals <> "')"
 }
