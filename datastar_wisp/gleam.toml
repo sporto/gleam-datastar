@@ -1,5 +1,5 @@
 name = "datastar_wisp"
-version = "3.0.0"
+version = "4.0.0"
 
 description = "Wisp adaptor for Datastar"
 licences = ["MIT"]
@@ -8,7 +8,7 @@ repository = { type = "github", user = "sporto", repo = "gleam-datastar" }
 [dependencies]
 gleam_stdlib = ">= 0.34.0 and < 2.0.0"
 wisp = ">= 1.0.0 and < 2.0.0"
-datastar = ">= 3.0.0 and < 4.0.0"
+datastar = ">= 4.0.0 and < 5.0.0"
 # datastar = { path = "../datastar" }
 
 [dev-dependencies]

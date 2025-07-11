@@ -6,7 +6,11 @@ import wisp/testing
 
 // gleeunit test functions end in `_test`
 pub fn send_test() {
-  let events = [ds_sse.merge_fragments("<div />") |> ds_sse.merge_fragments_end]
+  let events = [
+    ds_sse.patch_elements()
+    |> ds_sse.patch_elements_elements("<div />")
+    |> ds_sse.patch_elements_end,
+  ]
 
   let response =
     wisp.ok()
@@ -22,7 +26,5 @@ pub fn send_test() {
 
   response
   |> testing.string_body
-  |> should.equal(
-    "event: datastar-merge-fragments\ndata: fragments <div />\n\n",
-  )
+  |> should.equal("event: datastar-patch-elements\ndata: elements <div />\n\n")
 }
