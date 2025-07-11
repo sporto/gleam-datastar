@@ -11,7 +11,7 @@ import gleam/list
 import gleam/option.{type Option, None, Some}
 import gleam/string
 
-/// The merge mode used by merge fragments
+/// The merge mode used by patch elements
 pub type MergeMode {
   After
   Append
@@ -40,7 +40,6 @@ type EventType {
   ExecuteScript
   PatchElements
   PatchSignals
-  RemoveFragments
   RemoveSignals
 }
 
@@ -49,7 +48,6 @@ fn event_type_to_string(event_type: EventType) {
     ExecuteScript -> "datastar-execute-script"
     PatchElements -> "datastar-patch-elements"
     PatchSignals -> "datastar-patch-signals"
-    RemoveFragments -> "datastar-remove-fragments"
     RemoveSignals -> "datastar-remove-signals"
   }
 }
@@ -65,7 +63,6 @@ type Line {
 /// Like `datastar-patch-elements`.
 pub opaque type Event {
   EventPatchElement(PatchElementConfig)
-  EventRemoveFragments(RemoveFragmentsConfig)
   EventPatchSignals(PatchSignalsConfig)
   EventRemoveSignals(RemoveSignalsConfig)
   EventExecuteScript(ExecuteScriptConfig)
@@ -90,13 +87,13 @@ fn event_lines_to_strings(lines lines: List(Line)) {
 /// Takes an `Event` and generates a string to send back to the client
 ///
 /// ```gleam
-/// remove_fragments("#target")
-/// |> remove_fragments_end
+/// patch_elements("#target")
+/// |> patch_elements_end
 /// |> event_to_string
 /// ```
 /// Generates:
 /// ```text
-/// event: datastar-remove-fragments
+/// event: datastar-patch-elements
 /// data: selector #target
 ///
 /// ```
@@ -104,7 +101,6 @@ fn event_lines_to_strings(lines lines: List(Line)) {
 pub fn event_to_string(event: Event) -> String {
   case event {
     EventPatchElement(config) -> patch_elements_event_to_string(config)
-    EventRemoveFragments(config) -> remove_fragments_event_to_string(config)
     EventPatchSignals(config) -> patch_signals_event_to_string(config)
     EventRemoveSignals(config) -> remove_signals_event_to_string(config)
     EventExecuteScript(config) -> execture_script_event_to_string(config)
@@ -117,17 +113,19 @@ pub fn event_to_string(event: Event) -> String {
 /// [
 ///   patch_elements("<span>Hello</span>")
 ///   |> patch_elements_end,
-///   remove_fragments("#target")
-///   |> remove_fragments_end,
+///   patch_elements("#target")
+///   |> patch_elements_mode(Remove)
+///   |> patch_elements_end,
 /// ]
 /// |> events_to_string
 /// ```
 /// Generates:
 /// ```text
 /// event: datastar-patch-elements
-/// data: fragments <span>Hello</span>
+/// data: elements <span>Hello</span>
 ///
-/// event: datastar-remove-fragments
+/// event: datastar-patch-elements
+/// data: mode remove
 /// data: selector #target
 ///
 /// ```
@@ -140,11 +138,12 @@ pub fn events_to_string(events events: List(Event)) {
 }
 
 pub opaque type PatchElementConfig {
-  PatchElementConfig(fragments: String, options: PatchElementOptions)
+  PatchElementConfig(options: PatchElementOptions)
 }
 
 pub opaque type PatchElementOptions {
   PatchElementOptions(
+    elements: Option(String),
     event_id: Option(String),
     merge_mode: MergeMode,
     retry: Option(Int),
@@ -154,10 +153,11 @@ pub opaque type PatchElementOptions {
   )
 }
 
-/// Event to send new fragments to the client
+/// Event to send new elements to the client
 ///
 /// ```gleam
-/// patch_elements("<span>1</span>")
+/// patch_elements()
+/// |> patch_elements_element("<span>1</span>")
 /// |> patch_elements_selector("#feed")
 /// |> patch_elements_end
 /// ```
@@ -165,12 +165,13 @@ pub opaque type PatchElementOptions {
 /// ```text
 /// event: datastar-patch-elements
 /// data: selector #feed
-/// data: fragments <span>1</span>
+/// data: elements <span>1</span>
 ///
 /// ```
-pub fn patch_elements(fragments fragments: String) {
+pub fn patch_elements() {
   let options =
     PatchElementOptions(
+      elements: None,
       event_id: None,
       merge_mode: Outer,
       retry: None,
@@ -179,7 +180,23 @@ pub fn patch_elements(fragments fragments: String) {
       view_transition: False,
     )
 
-  PatchElementConfig(fragments:, options:)
+  PatchElementConfig(options:)
+}
+
+/// ```
+/// |> patch_elements_elements("<div>Hello</div>"),
+/// ```
+/// Generates:
+/// ```text
+/// id: 123
+/// ```
+pub fn patch_elements_elements(
+  config: PatchElementConfig,
+  value: String,
+) -> PatchElementConfig {
+  PatchElementConfig(
+    options: PatchElementOptions(..config.options, elements: Some(value)),
+  )
 }
 
 /// ```
@@ -194,7 +211,6 @@ pub fn patch_elements_event_id(
   value: String,
 ) -> PatchElementConfig {
   PatchElementConfig(
-    ..config,
     options: PatchElementOptions(..config.options, event_id: Some(value)),
   )
 }
@@ -228,7 +244,6 @@ pub fn patch_elements_retry(
   value: Int,
 ) -> PatchElementConfig {
   PatchElementConfig(
-    ..config,
     options: PatchElementOptions(..config.options, retry: Some(value)),
   )
 }
@@ -272,100 +287,6 @@ pub fn patch_elements_view_transition(
 
 pub fn patch_elements_end(config: PatchElementConfig) -> Event {
   EventPatchElement(config)
-}
-
-pub opaque type RemoveFragmentsConfig {
-  RemoveFragmentsConfig(selector: String, options: RemoveFragmentsOptions)
-}
-
-pub opaque type RemoveFragmentsOptions {
-  RemoveFragmentsOptions(
-    event_id: Option(String),
-    retry: Option(Int),
-    settle_duration: Int,
-    view_transition: Bool,
-  )
-}
-
-/// Event to remove fragments on the client
-///
-/// ```gleam
-/// remove_fragments("#feed")
-/// |> remove_fragments_end
-/// ```
-/// Generates:
-/// ```text
-/// event: datastar-remove-fragments
-/// data: selector #feed
-///
-/// ```
-pub fn remove_fragments(selector: String) {
-  let options =
-    RemoveFragmentsOptions(
-      event_id: None,
-      retry: None,
-      settle_duration: 300,
-      view_transition: False,
-    )
-  RemoveFragmentsConfig(selector:, options:)
-}
-
-/// ```
-/// |> remove_fragments_event_id("123"),
-/// ```
-/// Generates:
-/// ```text
-/// id: 123
-/// ```
-pub fn remove_fragments_event_id(
-  config: RemoveFragmentsConfig,
-  value: String,
-) -> RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    ..config,
-    options: RemoveFragmentsOptions(..config.options, event_id: Some(value)),
-  )
-}
-
-/// ```gleam
-/// |> remove_fragments_retry(3000),
-/// ```
-/// Generates:
-/// ```text
-/// retry: 3000
-/// ```
-pub fn remove_fragments_retry(
-  config: RemoveFragmentsConfig,
-  value: Int,
-) -> RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    ..config,
-    options: RemoveFragmentsOptions(..config.options, retry: Some(value)),
-  )
-}
-
-pub fn remove_fragments_settle_duration(
-  config: RemoveFragmentsConfig,
-  value: Int,
-) -> RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    ..config,
-    options: RemoveFragmentsOptions(..config.options, settle_duration: value),
-  )
-}
-
-pub fn remove_fragments_view_transition(
-  config: RemoveFragmentsConfig,
-  value: Bool,
-) -> RemoveFragmentsConfig {
-  RemoveFragmentsConfig(
-    ..config,
-    options: RemoveFragmentsOptions(..config.options, view_transition: value),
-  )
-}
-
-pub fn remove_fragments_end(config: RemoveFragmentsConfig) {
-  EventRemoveFragments(config)
 }
 
 pub opaque type PatchSignalsConfig {
@@ -623,20 +544,7 @@ fn patch_elements_event_to_string(config: PatchElementConfig) {
     add_selector(config.options.selector),
     add_settle_duration(config.options.settle_duration),
     add_view_transition(config.options.view_transition),
-    [LineData("fragments " <> config.fragments)],
-  ]
-  |> list.flatten
-  |> event_lines_to_strings
-}
-
-fn remove_fragments_event_to_string(config: RemoveFragmentsConfig) {
-  [
-    [LineEventType(RemoveFragments)],
-    add_event_id(config.options.event_id),
-    add_retry(config.options.retry),
-    [LineData("selector " <> config.selector)],
-    add_settle_duration(config.options.settle_duration),
-    add_view_transition(config.options.view_transition),
+    add_elements(config.options.elements),
   ]
   |> list.flatten
   |> event_lines_to_strings
@@ -706,6 +614,13 @@ fn option_to_list(option: Option(a)) {
   case option {
     Some(value) -> [value]
     None -> []
+  }
+}
+
+fn add_elements(maybe: Option(String)) {
+  case maybe {
+    None -> []
+    Some(data) -> [LineData("elements " <> data)]
   }
 }
 

@@ -5,10 +5,11 @@ import gleeunit/should
 pub fn patch_elements_minimal_test() {
   let expected =
     "event: datastar-patch-elements
-data: fragments <span>Hello</span>
+data: elements <span>Hello</span>
 "
 
-  ds_sse.patch_elements("<span>Hello</span>")
+  ds_sse.patch_elements()
+  |> ds_sse.patch_elements_elements("<span>Hello</span>")
   |> ds_sse.patch_elements_end
   |> ds_sse.event_to_string
   |> should.equal(expected)
@@ -23,10 +24,11 @@ data: mode inner
 data: selector #feed
 data: settleDuration 10
 data: useViewTransition true
-data: fragments <span>1</span>
+data: elements <span>1</span>
 "
 
-  ds_sse.patch_elements(fragments: "<span>1</span>")
+  ds_sse.patch_elements()
+  |> ds_sse.patch_elements_elements("<span>1</span>")
   |> ds_sse.patch_elements_event_id("123")
   |> ds_sse.patch_elements_merge_mode(ds_sse.Inner)
   |> ds_sse.patch_elements_retry(2000)
@@ -41,60 +43,15 @@ data: fragments <span>1</span>
 pub fn patch_elements_defaults_test() {
   let expected =
     "event: datastar-patch-elements
-data: fragments <span>1</span>
+data: elements <span>1</span>
 "
 
-  ds_sse.patch_elements(fragments: "<span>1</span>")
+  ds_sse.patch_elements()
+  |> ds_sse.patch_elements_elements("<span>1</span>")
   |> ds_sse.patch_elements_merge_mode(ds_sse.Outer)
   |> ds_sse.patch_elements_settle_duration(300)
   |> ds_sse.patch_elements_view_transition(False)
   |> ds_sse.patch_elements_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn remove_fragments_minimal_test() {
-  let expected =
-    "event: datastar-remove-fragments
-data: selector #target
-"
-
-  ds_sse.remove_fragments("#target")
-  |> ds_sse.remove_fragments_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn remove_fragments_maximal_test() {
-  let expected =
-    "event: datastar-remove-fragments
-id: 123
-retry: 2000
-data: selector #target
-data: settleDuration 500
-data: useViewTransition true
-"
-
-  ds_sse.remove_fragments("#target")
-  |> ds_sse.remove_fragments_event_id("123")
-  |> ds_sse.remove_fragments_retry(2000)
-  |> ds_sse.remove_fragments_settle_duration(500)
-  |> ds_sse.remove_fragments_view_transition(True)
-  |> ds_sse.remove_fragments_end
-  |> ds_sse.event_to_string
-  |> should.equal(expected)
-}
-
-pub fn remove_fragments_defaults_test() {
-  let expected =
-    "event: datastar-remove-fragments
-data: selector #target
-"
-
-  ds_sse.remove_fragments("#target")
-  |> ds_sse.remove_fragments_settle_duration(300)
-  |> ds_sse.remove_fragments_view_transition(False)
-  |> ds_sse.remove_fragments_end
   |> ds_sse.event_to_string
   |> should.equal(expected)
 }
@@ -227,16 +184,20 @@ data: script window.location = \"https://data-star.dev\"
 pub fn event_has_empty_lines_test() {
   let expected =
     "event: datastar-patch-elements
-data: fragments <span>Hello</span>
+data: elements <span>Hello</span>
 
-event: datastar-remove-fragments
+event: datastar-patch-elements
 data: selector #id2
 
 "
 
   [
-    ds_sse.patch_elements("<span>Hello</span>") |> ds_sse.patch_elements_end,
-    ds_sse.remove_fragments("#id2") |> ds_sse.remove_fragments_end,
+    ds_sse.patch_elements()
+      |> ds_sse.patch_elements_elements("<span>Hello</span>")
+      |> ds_sse.patch_elements_end,
+    ds_sse.patch_elements()
+      |> ds_sse.patch_elements_selector("#id2")
+      |> ds_sse.patch_elements_end,
   ]
   |> ds_sse.events_to_string
   |> should.equal(expected)
@@ -244,20 +205,24 @@ data: selector #id2
 
 pub fn readme_example_test() {
   let expected =
-    "event: datastar-remove-fragments
+    "event: datastar-patch-elements
+data: mode remove
 data: selector #error
 
 event: datastar-patch-elements
 data: mode inner
 data: selector #notice
-data: fragments <span>Hello</span>
+data: elements <span>Hello</span>
 
 "
 
   [
-    ds_sse.remove_fragments("#error")
-      |> ds_sse.remove_fragments_end,
-    ds_sse.patch_elements("<span>Hello</span>")
+    ds_sse.patch_elements()
+      |> ds_sse.patch_elements_selector("#error")
+      |> ds_sse.patch_elements_merge_mode(ds_sse.Remove)
+      |> ds_sse.patch_elements_end,
+    ds_sse.patch_elements()
+      |> ds_sse.patch_elements_elements("<span>Hello</span>")
       |> ds_sse.patch_elements_selector("#notice")
       |> ds_sse.patch_elements_merge_mode(ds_sse.Inner)
       |> ds_sse.patch_elements_end,
