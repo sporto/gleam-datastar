@@ -257,11 +257,8 @@ pub fn patch_elements_end(config: PatchElementConfig) -> Event {
 }
 
 pub opaque type PatchSignalsConfig {
-  PatchSignalsConfig(signals: Json, options: PatchSignalsOptions)
-}
-
-pub opaque type PatchSignalsOptions {
-  PatchSignalsOptions(
+  PatchSignalsConfig(
+    signals: Json,
     event_id: Option(String),
     retry: Option(Int),
     only_if_missing: Bool,
@@ -285,11 +282,12 @@ pub opaque type PatchSignalsOptions {
 ///
 /// ```
 pub fn patch_signals(signals: Json) {
-  // TODO signals should be json
-  let options =
-    PatchSignalsOptions(event_id: None, retry: None, only_if_missing: False)
-
-  PatchSignalsConfig(signals:, options:)
+  PatchSignalsConfig(
+    signals:,
+    event_id: None,
+    retry: None,
+    only_if_missing: False,
+  )
 }
 
 /// ```
@@ -301,10 +299,7 @@ pub fn patch_signals(signals: Json) {
 /// id: 123
 /// ```
 pub fn patch_signals_event_id(config: PatchSignalsConfig, value: String) {
-  PatchSignalsConfig(
-    ..config,
-    options: PatchSignalsOptions(..config.options, event_id: Some(value)),
-  )
+  PatchSignalsConfig(..config, event_id: Some(value))
 }
 
 /// ```gleam
@@ -315,10 +310,7 @@ pub fn patch_signals_event_id(config: PatchSignalsConfig, value: String) {
 /// retry: 3000
 /// ```
 pub fn patch_signals_retry(config: PatchSignalsConfig, value: Int) {
-  PatchSignalsConfig(
-    ..config,
-    options: PatchSignalsOptions(..config.options, retry: Some(value)),
-  )
+  PatchSignalsConfig(..config, retry: Some(value))
 }
 
 /// ```gleam
@@ -329,10 +321,7 @@ pub fn patch_signals_retry(config: PatchSignalsConfig, value: Int) {
 /// data: onlyIfMissing true
 /// ```
 pub fn patch_signals_only_if_missing(config: PatchSignalsConfig, value: Bool) {
-  PatchSignalsConfig(
-    ..config,
-    options: PatchSignalsOptions(..config.options, only_if_missing: value),
-  )
+  PatchSignalsConfig(..config, only_if_missing: value)
 }
 
 pub fn patch_signals_end(config: PatchSignalsConfig) {
@@ -358,9 +347,9 @@ fn patch_elements_event_to_string(config: PatchElementConfig) {
 fn patch_signals_event_to_string(config: PatchSignalsConfig) {
   [
     [LineEventType(PatchSignals)],
-    add_event_id(config.options.event_id),
-    add_retry(config.options.retry),
-    add_only_if_missing(config.options.only_if_missing),
+    add_event_id(config.event_id),
+    add_retry(config.retry),
+    add_only_if_missing(config.only_if_missing),
     [LineData("signals " <> json.to_string(config.signals))],
   ]
   |> list.flatten
