@@ -1,5 +1,5 @@
 //// This module provides functions to add Datastar data attributes to html elements
-//// as shown here <https://data-star.dev/reference/attribute_plugins>
+//// as shown here <https://data-star.dev/reference/attributes>
 
 import gleam/dict
 import gleam/function
@@ -22,7 +22,7 @@ fn serialise_expressions(pairs: List(#(String, String))) {
 
 /// Sets the value of any HTML attribute to an expression, and keeps it in sync.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-attr>.
+/// See <https://data-star.dev/reference/attributes#data-attr>.
 ///
 /// e.g.
 /// ```gleam
@@ -38,6 +38,8 @@ pub fn data_attr(key, expression) {
 
 /// Similar to `data_attr` but sets multiple attrs at once.
 ///
+/// See <https://data-star.dev/reference/attributes#data-attr>
+///
 /// e.g.
 /// ```html
 /// <div data-attr="{title: $foo, disabled: $bar}"></div>
@@ -50,6 +52,8 @@ pub fn data_attrs(pairs) {
 /// Creates a signal and sets up two-way data binding.
 /// This takes the name of a signal (without the $).
 ///
+/// See <https://data-star.dev/reference/attributes#data-bind>
+///
 /// ```gleam
 /// ds_lustre.data_bind("first_name")
 /// ```
@@ -58,26 +62,27 @@ pub fn data_attrs(pairs) {
 /// <input data-bind="first_name" />
 /// ```
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-bind>
 pub fn data_bind(value) {
   attr.attribute("data-bind", value)
 }
 
 /// Adds or removes a class.
 ///
+/// See <https://data-star.dev/reference/attributes#data-class>
+///
 /// The first value is the class name.
 ///
 /// The second value is an expression.
 ///   e.g. a signal $selected or a complex expression
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-class>
 pub fn data_class(key, expression) {
   data_classes([#(key, expression)])
 }
 
 /// Control multiple classes at once
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-class>
+/// See <https://data-star.dev/reference/attributes#data-class>
+///
 pub fn data_classes(pairs: List(#(String, String))) {
   let expression = serialise_expressions(pairs)
 
@@ -86,29 +91,28 @@ pub fn data_classes(pairs: List(#(String, String))) {
 
 /// Creates a signal that is computed based on an expression.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-computed>
+/// See <https://data-star.dev/reference/attributes#data-computed>
+///
 pub fn data_computed(key, value) {
   attr.attribute("data-computed-" <> key, value)
 }
 
-/// See <https://data-star.dev/reference/attribute_plugins#data-custom-validity>
-pub fn data_custom_validity(expression: String) {
-  attr.attribute("data-custom-validity", expression)
-}
+// Missing https://data-star.dev/reference/attributes#data-effect
 
-/// See <https://data-star.dev/reference/attribute_plugins#data-indicator>
+// Missing https://data-star.dev/reference/attributes#data-ignore
+
+// Missing https://data-star.dev/reference/attributes#data-ignore-morph
+
+/// See <https://data-star.dev/reference/attributes#data-indicator>
 pub fn data_indicator(signal: String) {
   attr.attribute("data-indicator", signal)
 }
 
-/// See <https://data-star.dev/reference/attribute_plugins#data-star-ignore>
-pub fn data_star_ignore() {
-  attr.attribute("data-star-ignore", "")
-}
+// Missing https://data-star.dev/reference/attributes#data-json-signals
 
 /// Attaches an event listener to an element.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-on>
+/// See <https://data-star.dev/reference/attributes#data-on>
 pub fn data_on(event, expression) {
   attr.attribute("data-on-" <> event, expression)
 }
@@ -118,34 +122,6 @@ pub fn data_on_click(expression) {
   data_on("click", expression)
 }
 
-/// Runs an expression when the element is loaded into the DOM.
-///
-/// See <https://data-star.dev/reference/attribute_plugins#data-on-load>
-pub fn data_on_load(expression: String) {
-  data_on("load", expression)
-}
-
-/// Runs an expression on every requestAnimationFrame event.
-///
-/// See <https://data-star.dev/reference/attribute_plugins#data-on-raf>
-pub fn data_on_raf(expression: String) {
-  data_on("raf", expression)
-}
-
-/// Runs an expression whenever a signal changes.
-///
-/// See <https://data-star.dev/reference/attribute_plugins#data-on-signal-change>
-pub fn data_on_signal_change(expression) {
-  data_on("signal-change", expression)
-}
-
-/// Runs an expression whenever a signal changes.
-///
-/// See <https://data-star.dev/reference/attribute_plugins#data-on-signal-change>
-pub fn data_on_specific_signal_change(signal, expression) {
-  data_on("signal-change-" <> signal, expression)
-}
-
 /// Shorcut for `data_on("submit", _)`.
 ///
 /// This prevents the default submission behavior of forms.
@@ -153,52 +129,40 @@ pub fn data_on_submit(expression) {
   data_on("submit", expression)
 }
 
-/// Persists signals in local storage
-///
-/// e.g.
-/// ```html
-/// <div data-persist></div>
-/// ```
-///
-/// See <https://data-star.dev/reference/attribute_plugins#data-persist>
-pub fn data_persist(signals) {
-  attr.attribute("data-persist", signals)
-}
+// Missing https://data-star.dev/reference/attributes#data-on-intersect
 
-/// See <https://data-star.dev/reference/attribute_plugins#data-replace-url>
-pub fn data_replace_url(value) {
-  attr.attribute("data-replace-url", value)
-}
+// Missing https://data-star.dev/reference/attributes#data-on-interval
+
+// Missing https://data-star.dev/reference/attributes#data-on-load
+
+// Missing https://data-star.dev/reference/attributes#data-on-signal-patch
+
+// Missing https://data-star.dev/reference/attributes#data-preserve-attr
 
 /// Creates a signal that is a reference to this DOM element.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-ref>
+/// See <https://data-star.dev/reference/attributes#data-ref>
 pub fn data_ref(value) {
   attr.attribute("data-ref", value)
 }
 
-/// See <https://data-star.dev/reference/attribute_plugins#data-scroll-into-view>
-pub fn data_scroll_into_view() {
-  attr.attribute("data-scroll-into-view", "")
-}
-
 /// Show or hides an element based on an expression.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-show>
+/// See <https://data-star.dev/reference/attributes#data-show>
 pub fn data_show(value) {
   attr.attribute("data-show", value)
 }
 
-/// Merges one signals into the existing signals.
+/// Patches one signals into the existing signals.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-signals>
+/// See <https://data-star.dev/reference/attributes#data-signals>
 pub fn data_signal(signal, value) {
   attr.attribute("data-signals-" <> signal, value)
 }
 
 /// Merges one or more signals into the existing signals.
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-signals>
+/// See <https://data-star.dev/reference/attributes#data-signals>
 pub fn data_signals(signals: List(#(String, json.Json))) {
   let signals_json =
     signals
@@ -211,17 +175,13 @@ pub fn data_signals(signals: List(#(String, json.Json))) {
 
 /// Binds the text content of an element to an expression.
 ///
+/// See <https://data-star.dev/reference/attributes#data-text>
+///
 /// e.g.
 /// ```html
 /// <div data-text="$foo"></div>
 /// ```
 ///
-/// See <https://data-star.dev/reference/attribute_plugins#data-text>
 pub fn data_text(value: String) {
   attr.attribute("data-text", value)
-}
-
-/// See <https://data-star.dev/reference/attribute_plugins#data-view-transition>
-pub fn data_view_transition(value) {
-  attr.attribute("data-view-transition", value)
 }

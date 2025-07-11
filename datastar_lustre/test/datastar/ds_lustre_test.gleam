@@ -36,13 +36,6 @@ pub fn data_computed_test() {
   |> should.equal(attribute.attribute("data-computed-foo", "$bar + $baz"))
 }
 
-pub fn data_custom_validity_test() {
-  let expression = "$foo === $bar ? '' : 'Field values must be the same.'"
-
-  ds_lustre.data_custom_validity(expression)
-  |> should.equal(attribute.attribute("data-custom-validity", expression))
-}
-
 pub fn data_on_test() {
   ds_lustre.data_on("click", "$foo = ''")
   |> should.equal(attribute.attribute("data-on-click", "$foo = ''"))
