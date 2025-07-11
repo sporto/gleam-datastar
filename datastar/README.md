@@ -15,12 +15,15 @@ gleam add datastar
 import datastar/ds_sse
 
 [
-  ds_sse.remove_fragments("#error")
-  |> ds_sse.remove_fragments_end,
-  ds_sse.patch_elements("<span>Hello</span>")
-  |> ds_sse.patch_elements_selector("#notice")
-  |> ds_sse.patch_elements_merge_mode(Inner)
-  |> ds_sse.patch_elements_end,
+  ds_sse.patch_elements()
+    |> ds_sse.patch_elements_selector("#error")
+    |> ds_sse.patch_elements_merge_mode(ds_sse.Remove)
+    |> ds_sse.patch_elements_end,
+  ds_sse.patch_elements()
+    |> ds_sse.patch_elements_elements("<span>Hello</span>")
+    |> ds_sse.patch_elements_selector("#notice")
+    |> ds_sse.patch_elements_merge_mode(ds_sse.Inner)
+    |> ds_sse.patch_elements_end,
 ]
 |> ds_sse.events_to_string
 ```
@@ -28,13 +31,14 @@ import datastar/ds_sse
 This generates:
 
 ```text
-event: datastar-remove-fragments
+event: datastar-patch-elements
+data: mode remove
 data: selector #error
 
 event: datastar-patch-elements
 data: mode inner
 data: selector #notice
-data: fragments <span>Hello</span>
+data: elements <span>Hello</span>
 ```
 
 API documentation at <https://hexdocs.pm/datastar>.
