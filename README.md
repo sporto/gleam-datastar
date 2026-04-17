@@ -17,23 +17,7 @@ This repository contains three packages:
 The packages are compatible with datastar release v1.0.0-RC.8. 
 
 Datastar has an optional PRO license with extra features. 
+
 The versions of datastar after beta 11 are not available through npm. (only cdn and github).
 
-You can either include datastar or the open fork dataSPA which comes with some additional plugins and the dataSPA inspector. 
-
-#### dataSPA
-
-https://github.com/dataSPA
-
-```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/dataSPA/dataSPA@main/bundles/datastar.js"></script>
-<script type="module" src="https://cdn.jsdelivr.net/gh/dataSPA/dataSPA-inspector@main/dataspa-inspector.bundled.js"></script>
-  ```
-OR 
-#### datastar
-
-https://github.com/starfederation/datastar
-
-```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/starfederation/datastar@v1.0.0-RC.8/bundles/datastar.js"></script>
-```
+You can either include datastar ([see guide](https://data-star.dev/guide/getting_started#installation)) or use [the open fork dataSPA](https://github.com/dataSPA/dataSPA) which comes with some additional plugins and the dataSPA inspector.
