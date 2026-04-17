@@ -3,6 +3,7 @@
 
 import gleam/dict
 import gleam/function
+import gleam/int
 import gleam/json
 import gleam/list
 import gleam/string
@@ -33,7 +34,7 @@ fn serialise_expressions(pairs: List(#(String, String))) {
 /// <div data-attr-title="$foo"></div>
 /// ```
 pub fn data_attr(key, expression) {
-  attr.attribute("data-attr-" <> key, expression)
+  attr.attribute("data-attr:" <> key, expression)
 }
 
 /// Similar to `data_attr` but sets multiple attrs at once.
@@ -94,7 +95,7 @@ pub fn data_classes(pairs: List(#(String, String))) {
 /// See <https://data-star.dev/reference/attributes#data-computed>
 ///
 pub fn data_computed(key, value) {
-  attr.attribute("data-computed-" <> key, value)
+  attr.attribute("data-computed:" <> key, value)
 }
 
 /// Executes an expression on page load and whenever any signals in the expression change.
@@ -113,13 +114,32 @@ pub fn data_indicator(signal: String) {
   attr.attribute("data-indicator", signal)
 }
 
-// Missing https://data-star.dev/reference/attributes#data-json-signals
+///Runs an expression when the attribute is initialized. This can happen on page load, when an element is patched into the DOM, and any time the attribute is modified (via a backend action or otherwise).
+/// ```gleam
+/// data_init("$count = 1")
+/// ```
+/// https://data-star.dev/reference/attributes#data-init
+pub fn data_init(expression: String) {
+  attr.attribute("data-init", expression)
+}
+
+///Sets the text content of an element to a reactive JSON stringified version of signals
+/// ```gleam
+/// data_json_signals(include: "^app", exclude: "temp$") //use regexp
+/// ```
+/// https://data-star.dev/reference/attributes#data-json-signals
+pub fn data_json_signals(include: String, exclude: String) {
+  attr.attribute(
+    "data-json-signals",
+    "{include: /" <> include <> "/, exclude: /" <> exclude <> "/}",
+  )
+}
 
 /// Attaches an event listener to an element.
 ///
 /// See <https://data-star.dev/reference/attributes#data-on>
 pub fn data_on(event, expression) {
-  attr.attribute("data-on-" <> event, expression)
+  attr.attribute("data-on:" <> event, expression)
 }
 
 /// Shorcut for `data_on("click", _)`.
@@ -134,15 +154,74 @@ pub fn data_on_submit(expression) {
   data_on("submit", expression)
 }
 
-// Missing https://data-star.dev/reference/attributes#data-on-intersect
+/// Runs an expression when the element intersects with the viewport.
+/// ```html
+/// data_on_intersect("$intersected = true")
+/// ```
+/// ```html
+/// <div data-on-intersect="$intersected = true"></div>
+/// ```
+/// https://data-star.dev/reference/attributes#data-on-intersect
+pub fn data_on_intersect(expression) {
+  attr.attribute("data-on-intersect", expression)
+}
 
-// Missing https://data-star.dev/reference/attributes#data-on-interval
+/// Runs an expression at a regular interval.
+/// ```gleam
+/// data_on_interval("$count++", 1000) //milliseconds
+/// ```
+/// ```html
+/// <div data-on-interval="$count++"></div>
+/// ```
+/// https://data-star.dev/reference/attributes#data-on-interval
+pub fn data_on_interval(expression, duration) {
+  attr.attribute(
+    "data-on-interval__duration." <> int.to_string(duration) <> "ms",
+    expression,
+  )
+}
 
-// Missing https://data-star.dev/reference/attributes#data-on-load
+/// Runs an expression whenever any signals are patched. This is useful for tracking changes, updating computed values, or triggering side effects when data updates.
+/// ```gleam
+/// data_on_signal_patch("console.log('A signal changed!', patch)")
+/// ```
+/// ```html
+/// <div data-on-signal-patch="console.log('Signal patch:', patch)"></div>
+/// ```
+/// https://data-star.dev/reference/attributes#data-on-signal-patch
+pub fn data_on_signal_patch(expression) {
+  attr.attribute("data-on-signal-patch", expression)
+}
 
-// Missing https://data-star.dev/reference/attributes#data-on-signal-patch
+/// Filters which signals to watch when using the data-on-signal-patch attribute.
+/// ```gleam
+/// data_on_signal_patch_filter(include: "user|name", exclude: "password") //use regexp
+/// ```
+/// ```html
+/// <div data-on-signal-patch-filter="{include: /user|name/, exclude: /password/}"></div>
+/// ```
+/// https://data-star.dev/reference/attributes#data-on-signal-patch-filter
+pub fn data_on_signal_patch_filter(include: String, exclude: String) {
+  attr.attribute(
+    "data-persist",
+    "{include: /" <> include <> "/, exclude: /" <> exclude <> "/}",
+  )
+}
 
-// Missing https://data-star.dev/reference/attributes#data-preserve-attr
+/// Preserves the value of an attribute when morphing DOM elements..
+/// ```gleam
+/// data_preserve_attr("open class")
+/// ```
+/// ```html
+/// <details open class="foo" data-preserve-attr="open class">
+/// ...
+/// </details>
+/// ```
+///
+/// https://data-star.dev/reference/attributes#data-preserve-attr
+pub fn data_preserve_attr(value) {
+  attr.attribute("data-preserve-attr", value)
+}
 
 /// Creates a signal that is a reference to this DOM element.
 ///
@@ -162,7 +241,7 @@ pub fn data_show(value) {
 ///
 /// See <https://data-star.dev/reference/attributes#data-signals>
 pub fn data_signal(signal, value) {
-  attr.attribute("data-signals-" <> signal, value)
+  attr.attribute("data-signals:" <> signal, value)
 }
 
 /// Merges one or more signals into the existing signals.
@@ -189,4 +268,19 @@ pub fn data_signals(signals: List(#(String, json.Json))) {
 ///
 pub fn data_text(value: String) {
   attr.attribute("data-text", value)
+}
+
+/// The signals to be persisted can be filtered by providing a value that is an object with include and/or exclude properties that are regular expressions.
+/// ```gleam
+/// data_persist(include: "foo|bar", exclude: "baz") //use regexp
+/// ```
+/// ```html
+/// <div data-persist="{include: /foo/, exclude: /bar/}"></div>
+/// ```
+/// https://data-star.dev/reference/attributes#data-persist
+pub fn data_persist(include: String, exclude: String) {
+  attr.attribute(
+    "data-persist",
+    "{include: /" <> include <> "/, exclude: /" <> exclude <> "/}",
+  )
 }

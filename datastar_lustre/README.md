@@ -21,7 +21,7 @@ fn view() {
 Will produce:
 
 ```html
-<div data-attr-title="$foo"></div>
+<div data-attr:title="$foo"></div>
 ```
 
 Further documentation can be found at <https://hexdocs.pm/datastar_lustre>.
